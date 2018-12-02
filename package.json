@@ -22,7 +22,6 @@
   "config": {
     "ghooks": {
       "pre-commit": "eslint .",
-      "commit-msg": "validate-commit-msg",
       "pre-push": "eslint .",
       "post-merge": "yarn"
     }
