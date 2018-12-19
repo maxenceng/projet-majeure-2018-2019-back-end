@@ -5,7 +5,8 @@
   "license": "MIT",
   "scripts": {
     "start": "babel-node index.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "dev": "nodemon --exec babel-node index.js"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -17,7 +18,8 @@
     "eslint-plugin-import": "^2.9.0",
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.7.0",
-    "ghooks": "^2.0.4"
+    "ghooks": "^2.0.4",
+    "nodemon": "^1.18.9"
   },
   "config": {
     "ghooks": {
@@ -25,5 +27,11 @@
       "pre-push": "eslint .",
       "post-merge": "yarn"
     }
+  },
+  "dependencies": {
+    "express": "^4.16.4",
+    "pg": "^7.7.1",
+    "pg-hstore": "^2.3.2",
+    "sequelize": "^4.42.0"
   }
 }
