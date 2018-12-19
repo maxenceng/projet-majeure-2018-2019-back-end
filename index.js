@@ -1,11 +1,11 @@
 // eslint-disable-next-line no-console
-console.log(`Hello ${1 + 7}`);
-
-const express = require('express');
+import express from 'express';
+import DBConnexion from './src/middlewares/dbConnexion';
+import defaultRouter from './src/routes/default.route';
 
 const app = express();
 
-const defaultRoute = require('./src/routes/default.route.js');
-
-app.use(defaultRoute);
+const db = new DBConnexion();
+db.test();
+app.use(defaultRouter);
 app.listen(3000);

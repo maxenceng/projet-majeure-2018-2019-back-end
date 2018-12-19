@@ -1,0 +1,9 @@
+{
+  "config" : {
+    "user": "postgres",
+    "mdp": "WeMe1357",
+    "address": "127.0.0.1",
+    "port": 5432,
+    "project": "postgres"
+  }
+}
