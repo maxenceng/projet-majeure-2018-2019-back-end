@@ -23,7 +23,7 @@ router.route('/signIn').get((req, res) => {
  * Route Signup pour le site, vérifie tous les paramètres sont présents
  * et que les passwords match bien
  */
-router.route('/signUp').get((req, res) => {
+router.route('/signUp').post((req, res) => {
   authController.signUp(req, res);
   const password = req.params.password;
   const passwordVerif = req.params.passwordVerif;
