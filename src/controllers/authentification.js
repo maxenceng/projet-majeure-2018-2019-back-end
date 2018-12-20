@@ -1,12 +1,23 @@
+import webtoken from '../middlewares/webtoken';
+
 const AuthController = {
   signIn(req, res) {
-    res.send('signIn');
+    const payload = {
+      admin: false,
+    };
+    const options = {
+      subject: 'weme.com',
+    };
+    const WT = webtoken.signToken(payload, options);
+    res.send(WT);
   },
   signUp(req, res) {
-    res.send('signUp');
+    res.send(req.params);
+    let ret = 'signUp';
     if (req.params.login === 'abdel' && req.params.password === 'azer') {
-      res.send('authentification réussie');
+      ret = 'authentification réussie';
     }
+    res.send(ret);
   },
 };
 
