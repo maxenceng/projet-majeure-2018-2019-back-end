@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import authController from '../controllers/authentification';
+import AuthController from '../controllers/authentification';
 
 const router = Router();
-
+// TODO Transmettre la DB au controller
+const authController = new AuthController();
 /**
  * Route Signin pour le site, vérifie tous les paramètres sont présents
  */
@@ -24,7 +25,6 @@ router.route('/signIn').get((req, res) => {
  * et que les passwords match bien
  */
 router.route('/signUp').post((req, res) => {
-  authController.signUp(req, res);
   const password = req.params.password;
   const passwordVerif = req.params.passwordVerif;
   const email = req.params.email;
