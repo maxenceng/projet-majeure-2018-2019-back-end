@@ -2,10 +2,20 @@
 import express from 'express';
 import DBConnexion from './src/middlewares/dbConnexion';
 import defaultRouter from './src/routes/default.route';
+import authRouter from './src/routes/authentification.route';
 
-const app = express();
+class Server {
+  constructor(port) {
+    this.app = express();
+    this.dp = new DBConnexion();
+    this.initServ(port);
+  }
 
-const db = new DBConnexion();
-db.test();
-app.use(defaultRouter);
-app.listen(3000);
+  initServ(port) {
+    this.app.listen(port);
+    this.app.use(defaultRouter);
+    this.app.use(authRouter);
+  }
+}
+
+const server = new Server(3000);
