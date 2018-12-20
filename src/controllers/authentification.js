@@ -5,17 +5,15 @@ const AuthController = {
     const payload = {
       admin: false,
     };
-    const options = {
-      subject: 'weme.com',
-    };
-    const WT = webtoken.signToken(payload, options);
+    const WT = webtoken.signToken(payload);
     res.send(WT);
   },
   signUp(req, res) {
-    res.send(req.params);
-    let ret = 'signUp';
-    if (req.params.login === 'abdel' && req.params.password === 'azer') {
-      ret = 'authentification réussie';
+    let ret = 'signup failed!';
+    if (webtoken.verifyToken(req.query.token)) {
+      if (req.query.login === 'abdel' && req.query.password === 'azer') {
+        ret = 'authentification réussie';
+      }
     }
     res.send(ret);
   },

@@ -5,23 +5,23 @@ const privateKEY = fs.readFileSync('src/config/private.key', 'utf8');
 const publicKEY = fs.readFileSync('src/config/public.key', 'utf8');
 
 module.exports = {
-  signToken: (payload, options) => {
+  signToken: (payload) => {
   // Token signing options
     const signOptions = {
       issuer: 'WeMe Server',
-      subject: options.subject,
+      subject: 'weme.com',
       expiresIn: '12h',
       algorithm: 'HS256',
     };
 
-    return jwt.sign(payload, privateKEY, signOptions);
+    return jwt.sign(payload, publicKEY, signOptions);
   },
-  verifyToken: (token, options) => {
+  verifyToken: (token) => {
     const verifyOptions = {
       issuer: 'WeMe Server',
-      subject: options.subject,
+      subject: 'weme.com',
       expiresIn: '12h',
-      algorithm: ['HS256'],
+      algorithm: 'HS256',
     };
     try {
       return jwt.verify(token, publicKEY, verifyOptions);
