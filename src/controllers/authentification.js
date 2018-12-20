@@ -1,22 +1,45 @@
 import webtoken from '../middlewares/webtoken';
 
-const AuthController = {
-  signIn(req, res) {
-    const payload = {
-      admin: false,
+class AuthController {
+  constructor(db) {
+    this.db = db;
+  }
+
+  signInWithUsername(username, password, res) {
+    // To modif
+    const cb = () => {
+      const payload = {
+        admin: false,
+      };
+      const WT = webtoken.signToken(payload);
+      res.status(200).send('signInWithUsername', WT);
     };
-    const WT = webtoken.signToken(payload);
-    res.send(WT);
-  },
-  signUp(req, res) {
-    let ret = 'signup failed!';
-    if (webtoken.verifyToken(req.query.token)) {
-      if (req.query.login === 'abdel' && req.query.password === 'azer') {
-        ret = 'authentification réussie';
-      }
-    }
-    res.send(ret);
-  },
-};
+    this.db.sendRequest('request TODO', cb);
+  }
+
+  signInWithEmail(email, password, res) {
+    // To modif
+    const cb = () => {
+      const payload = {
+        admin: false,
+      };
+      const WT = webtoken.signToken(payload);
+      res.status(200).send('signInWithEmail', WT);
+    };
+    this.db.sendRequest('request TODO', cb);
+  }
+
+  signUp(username, password, email, res) {
+    // To modif
+    const cb = () => {
+      const payload = {
+        admin: false,
+      };
+      const WT = webtoken.signToken(payload);
+      res.status(200).send('signUp', WT);
+    };
+    this.db.sendRequest('request TODO', cb);
+  }
+}
 
 export default AuthController;

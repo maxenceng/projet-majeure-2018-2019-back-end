@@ -7,7 +7,7 @@ import authRouter from './src/routes/authentification.route';
 class Server {
   constructor(port) {
     this.app = express();
-    this.dp = new DBConnexion();
+    this.db = new DBConnexion();
     this.initServ(port);
   }
 

@@ -1,6 +1,9 @@
 import Sequelize from 'sequelize';
 import configServer from '../config/configDB.json';
 
+/**
+ * Classe qui créer le lien avec la base de données postgres
+ */
 class DBConnexion {
   constructor() {
     this.db = new Sequelize(configServer.config.project,
@@ -18,6 +21,7 @@ class DBConnexion {
       });
   }
 
+  // Test la connnexion à la base de données
   test() {
     this.db
       .authenticate()
@@ -27,6 +31,11 @@ class DBConnexion {
       .catch((err) => {
         console.error('Unable to connect to the database:', err);
       });
+  }
+
+  // TODO !!!
+  sendRequest(request) {
+    this.db.sendTruc(request);
   }
 }
 
