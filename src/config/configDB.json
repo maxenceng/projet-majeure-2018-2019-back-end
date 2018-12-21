@@ -4,6 +4,6 @@
     "mdp": "weme-project",
     "address": "ec2-18-234-188-116.compute-1.amazonaws.com",
     "port": 5432,
-    "project": "postgres"
+    "project": "weme"
   }
 }

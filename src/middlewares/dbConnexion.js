@@ -19,8 +19,7 @@ class DBConnexion {
           idle: 10000,
         },
       });
-    // TODO faire ça après être sûr que this.db soit initialisé
-    this.test();
+    // TODO faire ça après être sûr que this.db soit initialise
     this.model();
   }
 
@@ -28,8 +27,13 @@ class DBConnexion {
   test() {
     this.db
       .authenticate()
-      .then(() => true)
-      .catch(err => false);
+      .then(() => {
+        console.log('connexion success!');
+      })
+      .catch((err) => {
+        console.log('error connexion with database');
+        console.log(err);
+      });
   }
 
   // On map la base de données distante
@@ -98,7 +102,8 @@ class DBConnexion {
       id_event: { type: Sequelize.BIGINT, primaryKey: true },
       // clef primaire + clef étrangère ?
       id_user: { type: Sequelize.BIGINT, primaryKey: true },
-      status: Sequelize.status,
+      // wtf type
+      status: Sequelize.STRING,
     });
 
     this.db.define('conv_user', {

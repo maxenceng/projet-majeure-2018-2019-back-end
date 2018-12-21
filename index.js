@@ -15,6 +15,7 @@ class Server {
 
   initDB() {
     this.db = new DBConnexion();
+    this.db.test();
   }
 
   initRoutes() {
