@@ -1,9 +1,8 @@
 import { Router } from 'express';
-import AuthController from '../controllers/authentification';
+import authController from '../controllers/authentification';
 
 const router = Router();
 // TODO Transmettre la DB au controller
-const authController = new AuthController();
 /**
  * Route Signin pour le site, vérifie tous les paramètres sont présents
  */

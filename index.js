@@ -7,9 +7,10 @@ import authRouter from './src/routes/authentification.route';
 class Server {
   constructor(port) {
     this.app = express();
-    this.app.listen(port);
-    this.initDB();
-    this.initRoutes();
+    this.app.listen(port, () => {
+      this.initDB();
+      this.initRoutes();
+    });
   }
 
   initDB() {
