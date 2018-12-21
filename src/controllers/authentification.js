@@ -35,7 +35,7 @@ const authController = {
       res.status(200).send('signUp', WT);
     };
     db.sendRequest('request TODO', cb);
-  }
-}
+  },
+};
 
-export default AuthController;
+export default authController;

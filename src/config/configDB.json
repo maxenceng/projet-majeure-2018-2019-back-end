@@ -1,8 +1,8 @@
 {
   "config" : {
-    "user": "postgres",
-    "mdp": "WeMe1357",
-    "address": "127.0.0.1",
+    "user": "admin_user",
+    "mdp": "weme-project",
+    "address": "ec2-18-234-188-116.compute-1.amazonaws.com",
     "port": 5432,
     "project": "postgres"
   }
