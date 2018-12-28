@@ -19,8 +19,10 @@ class DBConnexion {
           idle: 10000,
         },
       });
+
     // TODO faire ça après être sûr que this.db soit initialise
     this.model();
+    this.getUser();
   }
 
   // Test la connnexion à la base de données
@@ -34,6 +36,12 @@ class DBConnexion {
         console.log('error connexion with database');
         console.log(err);
       });
+  }
+
+  getUser() {
+    this.db.query('SELECT * FROM USER').then((myTableRows) => {
+      console.log(JSON.stringify(myTableRows));
+    });
   }
 
   // On map la base de données distante

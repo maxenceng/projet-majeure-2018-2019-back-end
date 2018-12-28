@@ -27,6 +27,7 @@ const authController = {
 
   signUp(username, password, email, db, res) {
     // To modif
+    // On vérifie que les informations n'existent pas déja
     const cb = () => {
       const payload = {
         admin: false,
