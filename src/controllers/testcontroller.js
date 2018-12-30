@@ -1,6 +1,6 @@
 const TestController = {
   test(res) {
-    res.send('hello World');
+    res.send('The Worldo !!');
   },
 };
 

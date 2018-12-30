@@ -7,7 +7,7 @@ const router = Router();
  *  - picture
  *  - preferences
  *  - age
- *  -
+ *  - name
  */
 router.route('/userProfile').get((req, res) => {
 

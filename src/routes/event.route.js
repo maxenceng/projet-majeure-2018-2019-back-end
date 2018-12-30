@@ -41,4 +41,11 @@ router.route('/relatedProfileEvents').get((req, res) => {
 
 });
 
+/**
+ * route to add a new event, admin reserved
+ */
+router.route('/addEvent').get((req, res) => {
+  // Check if admin with token
+});
+
 export default router;

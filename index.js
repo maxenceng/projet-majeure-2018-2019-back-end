@@ -15,7 +15,7 @@ class Server {
     const server = http.createServer(this.app);
     this.io = io(server);
     this.app.listen(port, () => {
-      this.initDB();
+      // this.initDB();
       this.initRoutesREST();
     });
   }
