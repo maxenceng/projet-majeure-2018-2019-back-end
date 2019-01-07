@@ -1,7 +1,8 @@
 import webtoken from '../middlewares/webtoken';
+import dbService from '../services/db.service';
 
 const authController = {
-  signInWithUsername(username, password, db, res) {
+  signInWithUsername(username, password, res) {
     // To modif
     const cb = () => {
       const payload = {
@@ -10,10 +11,10 @@ const authController = {
       const WT = webtoken.signToken(payload);
       res.status(200).send('signInWithUsername', WT);
     };
-    db.sendRequest('request TODO', cb);
+    dbService.getUser(cb);
   },
 
-  signInWithEmail(email, password, db, res) {
+  signInWithEmail(email, password, res) {
     // To modif
     const cb = () => {
       const payload = {
@@ -22,10 +23,10 @@ const authController = {
       const WT = webtoken.signToken(payload);
       res.status(200).send('signInWithEmail', WT);
     };
-    db.sendRequest('request TODO', cb);
+    dbService.getUser(cb);
   },
 
-  signUp(username, password, email, db, res) {
+  signUp(firstname, name, password, email, res) {
     // To modif
     // On vérifie que les informations n'existent pas déja
     const cb = () => {
@@ -35,7 +36,7 @@ const authController = {
       const WT = webtoken.signToken(payload);
       res.status(200).send('signUp', WT);
     };
-    db.sendRequest('request TODO', cb);
+    dbService.createUser(firstname, name, password, email, null, cb);
   },
 };
 

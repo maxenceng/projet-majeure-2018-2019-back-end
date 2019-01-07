@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import webtoken from '../middlewares/webtoken';
 
 const router = Router();
 
@@ -38,7 +39,9 @@ router.route('/allEvents').get((req, res) => {
  * events chosed for the user in particular
  */
 router.route('/relatedProfileEvents').get((req, res) => {
-
+  if (webtoken.verifyToken(req.params.WT)) {
+    res.status(200).send('Authorized!!');
+  }
 });
 
 /**
@@ -46,6 +49,13 @@ router.route('/relatedProfileEvents').get((req, res) => {
  */
 router.route('/addEvent').get((req, res) => {
   // Check if admin with token
+  const WT = req.params.WT;
+  if (webtoken.verifyToken(WT)) {
+    const decodeWT = webtoken.decode(WT);
+    if (decodeWT && decodeWT.paylaod.admin) {
+      res.status(200).send('Authorized!!');
+    }
+  }
 });
 
 export default router;

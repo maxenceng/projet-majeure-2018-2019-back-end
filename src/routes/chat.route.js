@@ -7,7 +7,7 @@ export default class ChatRoutes {
   initRoutes() {
     this.io.on('connection', (socket) => {
       socket.on('connection', () => {
-
+        console.log(`New WebSocket Client : ${socket.id}`);
       });
 
       socket.on('signIn', (data) => {
