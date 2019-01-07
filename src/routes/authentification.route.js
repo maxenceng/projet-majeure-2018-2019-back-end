@@ -9,15 +9,24 @@ const router = Router();
  * Route Signin pour le site, vérifie tous les paramètres sont présents
  */
 router.route('/signIn').get((req, res) => {
-  const password = req.params.password;
-  const email = req.params.email;
-  const username = req.params.username;
-  if (typeof username === 'string' && typeof password === 'string') {
-    authController.signInWithUsername(username, password, res);
-  } else if (typeof email === 'string' && typeof password === 'string') {
-    authController.signInWithEmail(username, password, res);
+  const email = req.query.email;
+  const password = req.query.password;
+
+  // Check missing parameters
+  if (!email || !password) { res.status(404).send({ message: 'Missing parameters' }); }
+
+  // Check types email and password
+  if (typeof email === 'string' && typeof password === 'string') {
+    // Check valid email
+    if (!/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      .test(email)) { res.status(404).send({ message: 'Enter a valid email' }); }
+
+    // Check password length
+    if (password.length > 50) { res.status(404).send({ message: 'Password too long!' }); }
+
+    authController.signIn(email, password, res);
   } else {
-    res.status(400).send('bad parameters');
+    res.status(400).send({ message: 'bad parameters' });
   }
 });
 
@@ -44,7 +53,7 @@ router.route('/signUp').post((req, res) => {
         .test(email)) { res.status(404).send({ message: 'Enter a valid email' }); }
 
       // Check longueur noms
-      if (firstname.length > 60 || name.length > 60) { res.status(400).send({ message: 'Too long firstname or name!' }); }
+      if (firstname.length > 60 || name.length > 60 || password > 40) { res.status(400).send({ message: 'Too long firstname or name or password!' }); }
 
       // Check passwords
       if (passwordVerif !== password) { res.status(400).send({ message: 'Passwords don\'t match' }); }

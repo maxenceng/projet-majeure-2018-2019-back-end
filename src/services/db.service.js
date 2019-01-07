@@ -9,10 +9,11 @@ const dbconnexion = new DBConnexion();
  * Il suffira du modifier ce service pour taper sur les routes
  */
 const dbController = {
-  getUser(callback) {
-    dbconnexion.db.query('SELECT * FROM USER').then((myTableRows) => {
-      console.log(JSON.stringify(myTableRows));
-      callback();
+  getUser(email, password, callback) {
+    dbconnexion.db.query(`SELECT * FROM USERS WHERE USER_PWD = '${password}' AND USER_EMAIL = '${email}'`).then((result) => {
+      callback(result[0]);
+    }).catch((err) => {
+      console.error(err);
     });
   },
 
@@ -29,6 +30,8 @@ const dbController = {
       .then((user) => {
         console.log(user.toJSON());
         callback();
+      }).catch((err) => {
+        console.error(err);
       });
   },
 };
