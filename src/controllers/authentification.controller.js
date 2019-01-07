@@ -9,7 +9,7 @@ const authController = {
         admin: false,
       };
       const WT = webtoken.signToken(payload);
-      res.status(200).send('signInWithUsername', WT);
+      res.status(200).send({ message: 'signInWithUsername' });
     };
     dbService.getUser(cb);
   },
@@ -21,7 +21,7 @@ const authController = {
         admin: false,
       };
       const WT = webtoken.signToken(payload);
-      res.status(200).send('signInWithEmail', WT);
+      res.status(200).send({ message: 'signInWithEmail' });
     };
     dbService.getUser(cb);
   },
@@ -34,9 +34,9 @@ const authController = {
         admin: false,
       };
       const WT = webtoken.signToken(payload);
-      res.status(200).send('signUp', WT);
+      res.status(200).send({ message: 'signUp', token: WT });
     };
-    dbService.createUser(firstname, name, password, email, null, cb);
+    dbService.createUser(firstname, name, email, password, null, cb);
   },
 };
 

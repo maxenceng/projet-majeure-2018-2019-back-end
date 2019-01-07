@@ -18,8 +18,8 @@ const dbController = {
 
   createUser(firstname, name, email, pwd, profile, callback) {
     dbconnexion.db.sync()
-      .then(() => this.user.create({
-        // id_user: { type: Sequelize.BIGINT, primaryKey: true },
+      .then(() => dbconnexion.user.create({
+        id_user: 2,
         user_firstname: firstname,
         user_name: name,
         user_email: email,

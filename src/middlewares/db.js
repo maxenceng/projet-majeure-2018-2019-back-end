@@ -21,8 +21,8 @@ class DBConnexion {
       });
 
     // TODO faire ça après être sûr que this.db soit initialise
-    this.model();
     this.test();
+    this.model();
   }
 
   // Test la connnexion à la base de données
@@ -37,6 +37,11 @@ class DBConnexion {
         console.log(err);
       });
   }
+
+  // Attention: juste pour les tests, à supprimer en prod
+  /* dropTables() {
+    this.db.query('drop table profiles');
+  } */
 
   // On map la base de données distante
   model() {
