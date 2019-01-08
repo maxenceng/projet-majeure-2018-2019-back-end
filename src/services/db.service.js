@@ -19,7 +19,7 @@ const dbController = {
     });
   },
 
-  createUser(firstname, name, email, pwd, profile, callback) {
+  createUser(firstname, name, pwd, email, profile, callback) {
     dbconnexion.db.query(`SELECT * FROM USERS WHERE USER_PWD = '${pwd}' AND USER_EMAIL = '${email}'`).then((result) => {
       if (result[0].length === 0) {
         dbconnexion.user.create({
