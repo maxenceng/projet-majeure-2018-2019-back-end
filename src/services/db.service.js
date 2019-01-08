@@ -30,7 +30,6 @@ const dbController = {
         const hashpwd = hash.digest('hex');
 
         dbconnexion.user.create({
-          id_user: 5,
           user_firstname: firstname,
           user_name: name,
           user_email: email,
