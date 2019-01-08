@@ -20,17 +20,20 @@ class DBConnexion {
         },
       });
 
-    // TODO faire ça après être sûr que this.db soit initialise
-    this.model();
-    this.test();
+    // TODO faire ça après l'init de la db
+    this.init();
   }
 
-  // Test la connnexion à la base de données
-  test() {
+  // Initialisation DB
+  init() {
     this.db
       .authenticate()
       .then(() => {
-        console.log('connexion success!');
+        this.model();
+      })
+      .then(() => {
+        // Synchronisation du modèle
+        this.db.sync();
       })
       .catch((err) => {
         console.log('error connexion with database');

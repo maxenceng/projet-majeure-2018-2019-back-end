@@ -9,27 +9,38 @@ const dbconnexion = new DBConnexion();
  * Il suffira du modifier ce service pour taper sur les routes
  */
 const dbController = {
-  getUser(callback) {
-    dbconnexion.db.query('SELECT * FROM USER').then((myTableRows) => {
-      console.log(JSON.stringify(myTableRows));
-      callback();
+  getUser(email, password, callback) {
+    dbconnexion.db.query(`SELECT * FROM USERS WHERE USER_PWD = '${password}' AND USER_EMAIL = '${email}'`).then((result) => {
+      callback(null, result[0]);
+    }).catch((err) => {
+      // TODO Appeller un callback pour send une erreure
+      console.error(err);
+      callback('Error append when signIn');
     });
   },
 
   createUser(firstname, name, email, pwd, profile, callback) {
-    dbconnexion.db.sync()
-      .then(() => this.user.create({
-        // id_user: { type: Sequelize.BIGINT, primaryKey: true },
-        user_firstname: firstname,
-        user_name: name,
-        user_email: email,
-        user_pwd: pwd,
-        user_profile: profile,
-      }))
-      .then((user) => {
-        console.log(user.toJSON());
-        callback();
-      });
+    dbconnexion.db.query(`SELECT * FROM USERS WHERE USER_PWD = '${pwd}' AND USER_EMAIL = '${email}'`).then((result) => {
+      if (result[0].length === 0) {
+        dbconnexion.user.create({
+          id_user: 3,
+          user_firstname: firstname,
+          user_name: name,
+          user_email: email,
+          user_pwd: pwd,
+          user_profile: profile,
+        })
+          .then((user) => {
+            console.log(user.toJSON());
+            callback();
+          }).catch((err) => {
+            console.error(err);
+            callback('Error append when signUp');
+          });
+      } else {
+        callback('User already exist!');
+      }
+    });
   },
 };
 
