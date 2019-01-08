@@ -9,7 +9,7 @@ const dbconnexion = new DBConnexion();
  * Dans le futur elle pourra être accessible via spring (maybe)
  * Il suffira du modifier ce service pour taper sur les routes
  */
-const dbController = {
+const dbService = {
   getUser(email, password, callback) {
     const hash = crypto.createHash('sha256');
     hash.update(password + email);
@@ -23,12 +23,11 @@ const dbController = {
   },
 
   createUser(firstname, name, pwd, email, profile, callback) {
-    dbconnexion.db.query(`SELECT * FROM USERS WHERE USER_PWD = '${pwd}' AND USER_EMAIL = '${email}'`).then((result) => {
+    const hash = crypto.createHash('sha256');
+    hash.update(pwd + email);
+    const hashpwd = hash.digest('hex');
+    dbconnexion.db.query(`SELECT * FROM USERS WHERE USER_PWD = '${hashpwd}' AND USER_EMAIL = '${email}'`).then((result) => {
       if (result[0].length === 0) {
-        const hash = crypto.createHash('sha256');
-        hash.update(pwd + email);
-        const hashpwd = hash.digest('hex');
-
         dbconnexion.user.create({
           user_firstname: firstname,
           user_name: name,
@@ -50,4 +49,4 @@ const dbController = {
   },
 };
 
-export default dbController;
+export default dbService;

@@ -33,7 +33,7 @@ class DBConnexion {
       })
       .then(() => {
         // Synchronisation du modèle
-        this.db.sync();
+        // this.db.sync();
       })
       .catch((err) => {
         console.log('error connexion with database');

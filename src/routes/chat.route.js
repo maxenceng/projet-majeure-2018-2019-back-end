@@ -11,9 +11,9 @@ export default class ChatRoutes {
       });
 
       socket.on('signIn', (data) => {
-        // On stocke la personne avec son pseudo en clef, son id de socket en param
-        if (data.pseudo) {
-          this.usersConnected[data.pseudo] = { socketId: socket.id };
+        // On stocke la personne avec son email en clef, son id de socket en param
+        if (data.email) {
+          this.usersConnected[data.email] = { socketId: socket.id };
         } else {
           // On envoie un petit signal au client pour lui dire que c'est la merde
           // TODO

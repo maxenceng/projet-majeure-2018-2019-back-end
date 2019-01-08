@@ -3,7 +3,7 @@
     "user": "admin_user",
     "mdp": "weme-project",
     "address": "ec2-18-234-188-116.compute-1.amazonaws.com",
-    "port": 5432,
+    "port": 25432,
     "project": "weme"
   }
 }

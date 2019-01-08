@@ -20,7 +20,6 @@ const authController = {
   },
 
   signUp(firstname, name, password, email, res) {
-    // TODO On vérifie que les informations n'existent pas déja
     const cb = (err) => {
       if (err) { return res.status(401).send({ error: err }); }
       const payload = {
