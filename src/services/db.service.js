@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import DBConnexion from '../middlewares/db';
 
 const dbconnexion = new DBConnexion();
@@ -10,10 +11,12 @@ const dbconnexion = new DBConnexion();
  */
 const dbController = {
   getUser(email, password, callback) {
-    dbconnexion.db.query(`SELECT * FROM USERS WHERE USER_PWD = '${password}' AND USER_EMAIL = '${email}'`).then((result) => {
+    const hash = crypto.createHash('sha256');
+    hash.update(password + email);
+    const hashpwd = hash.digest('hex');
+    dbconnexion.db.query(`SELECT * FROM USERS WHERE USER_PWD = '${hashpwd}' AND USER_EMAIL = '${email}'`).then((result) => {
       callback(null, result[0]);
     }).catch((err) => {
-      // TODO Appeller un callback pour send une erreure
       console.error(err);
       callback('Error append when signIn');
     });
@@ -22,12 +25,16 @@ const dbController = {
   createUser(firstname, name, pwd, email, profile, callback) {
     dbconnexion.db.query(`SELECT * FROM USERS WHERE USER_PWD = '${pwd}' AND USER_EMAIL = '${email}'`).then((result) => {
       if (result[0].length === 0) {
+        const hash = crypto.createHash('sha256');
+        hash.update(pwd + email);
+        const hashpwd = hash.digest('hex');
+
         dbconnexion.user.create({
-          id_user: 3,
+          id_user: 5,
           user_firstname: firstname,
           user_name: name,
           user_email: email,
-          user_pwd: pwd,
+          user_pwd: hashpwd,
           user_profile: profile,
         })
           .then((user) => {
