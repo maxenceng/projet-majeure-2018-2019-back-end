@@ -1,45 +1,20 @@
-export default class ChatRoutes {
-  constructor(io) {
-    this.io = io;
-    this.usersConnected = {};
-  }
+import { Router } from 'express';
+import chat from '../services/db.service';
 
-  initRoutes() {
-    this.io.on('connection', (socket) => {
-      socket.on('connection', () => {
-        console.log(`New WebSocket Client : ${socket.id}`);
-      });
+const router = Router();
+/**
+ * Route pour avoir tous les messages d'un utilisateur
+ */
+router.route('/allMessages').get((req, res) => {
+  const email = req.query.email;
+  // On vérifie les types et existences
+  if (!email || typeof email !== typeof 'string') { return res.status(400).send({ error: 'Bad parameters' }); }
 
-      socket.on('signIn', (data) => {
-        // On stocke la personne avec son email en clef, son id de socket en param
-        if (data.email) {
-          this.usersConnected[data.email] = { socketId: socket.id };
-        } else {
-          // On envoie un petit signal au client pour lui dire que c'est la merde
-          // TODO
-        }
-      });
+  const cb = (error, messages) => {
+    if (error) { return res.status(400).send({ error: 'Error when trying to get all messages' }); }
+    return res.status(200).send({ messages });
+  };
+  return chat.getMessages(email, cb);
+});
 
-      socket.on('sendMessage', (data) => {
-        // Si la personne est connectée on lui envoie immédiatement
-        const dest = this.usersConnected[data.dest];
-        if (dest) {
-          this.io.to(`${dest.socketId}`).emit('message', { exp: data.exp, message: data.message });
-        }
-        // On stocke dans la base de donnée le message
-        // TODO
-      });
-
-      socket.on('disconnect', () => {
-        // On retire la personne des personnes connectées
-        let userDisconnected;
-        const keys = Object.keys(this.usersConnected);
-        keys.forEach((key) => {
-          if (this.usersConnected[key].socketId === socket.id) {
-            delete this.usersConnected[key];
-          }
-        });
-      });
-    });
-  }
-}
+export default router;
