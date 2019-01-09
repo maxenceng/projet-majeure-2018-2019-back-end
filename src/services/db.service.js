@@ -1,4 +1,6 @@
+import crypto from 'crypto';
 import DBConnexion from '../middlewares/db';
+import uniqueId from '../utils/uniqueId';
 
 const dbconnexion = new DBConnexion();
 
@@ -8,32 +10,100 @@ const dbconnexion = new DBConnexion();
  * Dans le futur elle pourra être accessible via spring (maybe)
  * Il suffira du modifier ce service pour taper sur les routes
  */
-const dbController = {
+const dbService = {
   getUser(email, password, callback) {
-    dbconnexion.db.query(`SELECT * FROM USERS WHERE USER_PWD = '${password}' AND USER_EMAIL = '${email}'`).then((result) => {
-      callback(result[0]);
+    const hash = crypto.createHash('sha256');
+    hash.update(password + email);
+    const hashpwd = hash.digest('hex');
+    dbconnexion.db.query(`SELECT * FROM "USER" WHERE "USER_PWD" = '${hashpwd}' AND "USER_EMAIL" = '${email}'`).then((result) => {
+      callback(null, result[0]);
     }).catch((err) => {
       console.error(err);
+      callback('Error append when signIn');
     });
   },
 
-  createUser(firstname, name, email, pwd, profile, callback) {
-    dbconnexion.db.sync()
-      .then(() => dbconnexion.user.create({
-        id_user: 2,
-        user_firstname: firstname,
-        user_name: name,
-        user_email: email,
-        user_pwd: pwd,
-        user_profile: profile,
-      }))
-      .then((user) => {
-        console.log(user.toJSON());
-        callback();
-      }).catch((err) => {
-        console.error(err);
-      });
+  createUser(firstname, name, pwd, email, profile, callback) {
+    // password hashé sale!
+    const hash = crypto.createHash('sha256');
+    hash.update(pwd + email);
+    const hashpwd = hash.digest('hex');
+    // Generate unique interger
+    const uniqId = uniqueId();
+    // On check si l'utilisateur existe ou non
+    dbconnexion.db.query(`SELECT * FROM "USER" WHERE "USER_EMAIL" = '${email}'`).then((result) => {
+      if (result[0].length === 0) {
+        // Création du profil associé à l'utilisateur
+        dbconnexion.profile.create({
+          ID_PROFILE: uniqId,
+          PROFILE_DESC: 'hello',
+          PROFILE_AVATAR: 'truc',
+          PROFILE_TAG: uniqId,
+        }).then(() => {
+          // Création de l'utilisateur
+          dbconnexion.user.create({
+            ID_USER: uniqId,
+            USER_FIRSTNAME: firstname,
+            USER_NAME: name,
+            USER_EMAIL: email,
+            USER_PWD: hashpwd,
+            USER_PROFILE: uniqId,
+          }).catch((err) => {
+            console.error(err);
+            callback('Error append when creating user');
+          });
+        }).then((user) => {
+          console.log(user);
+          callback();
+        }).catch((err) => {
+          console.error(err);
+          callback('Error append creating profile');
+        });
+      } else {
+        callback('User already exist!');
+      }
+    });
+  },
+
+  createMessage(message, author, destEmail, callback) {
+    const request = `SELECT c.ID_CONVERSATION FROM "CONVERSATION" c 
+      JOIN "CONV_USER" cu ON cu.ID_CONV = c.ID_CONVERSATION
+      JOIN "USER" u ON cu.ID_USER = u.ID_USER
+      WHERE u.USER_EMAIL = '${destEmail}'`;
+    dbconnexion.db.query(request).then((result) => {
+      if (result[0].length === 0) {
+        dbconnexion.message.create({
+          id_conversation: request,
+          // miliseconds depuis le 1 er janvier 1970
+          mes_date: Date.now(),
+          mes_author: author,
+          mes_message: message,
+        });
+        return callback(null);
+      }
+      return callback('No dest found in db');
+    }).catch((err) => {
+      console.error(err);
+      return callback('No dest found in db', null);
+    });
+  },
+
+  getMessages(email, callback) {
+    const request = `SELECT * FROM "MESSAGES" m 
+      JOIN "CONVERSATION" c ON m.id_message = c.conv_message
+      JOIN "CONV_USER" cu ON cu.id_conv = c.id_conversation
+      JOIN "USER" u ON cu.id_user = u.id_user 
+      WHERE u.email = '${email}'`;
+    dbconnexion.db.query(request).then((result) => {
+      if (result[0].length === 0) {
+        return callback(null, result[0]);
+      }
+      return callback(null, null);
+    }).catch((err) => {
+      console.error(err);
+      callback('Error append when getMessages', null);
+    });
   },
 };
 
-export default dbController;
+export default dbService;

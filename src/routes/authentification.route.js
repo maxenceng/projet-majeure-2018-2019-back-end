@@ -13,21 +13,21 @@ router.route('/signIn').get((req, res) => {
   const password = req.query.password;
 
   // Check missing parameters
-  if (!email || !password) { res.status(404).send({ message: 'Missing parameters' }); }
+  if (!email || !password) { return res.status(404).send({ message: 'Missing parameters' }); }
 
   // Check types email and password
   if (typeof email === 'string' && typeof password === 'string') {
     // Check valid email
     if (!/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-      .test(email)) { res.status(404).send({ message: 'Enter a valid email' }); }
+      .test(email)) { return res.status(404).send({ message: 'Enter a valid email' }); }
 
     // Check password length
-    if (password.length > 50) { res.status(404).send({ message: 'Password too long!' }); }
+    if (password.length > 50) { return res.status(404).send({ message: 'Password too long!' }); }
 
-    authController.signIn(email, password, res);
-  } else {
-    res.status(400).send({ message: 'bad parameters' });
+    // SignIn
+    return authController.signIn(email, password, res);
   }
+  return res.status(400).send({ error: 'bad parameters' });
 });
 
 /**
@@ -43,26 +43,26 @@ router.route('/signUp').post((req, res) => {
     const name = body.name;
 
     // Missing parameters check
-    if (!firstname || !name || !password || !email || !passwordVerif) { res.status(400).send({ message: 'missing parameters' }); }
+    if (!firstname || !name || !password || !email || !passwordVerif) { return res.status(400).send({ message: 'missing parameters' }); }
 
     // On vérifie le type des arguments
     if (typeof firstname === 'string' && typeof name === 'string' && typeof password === 'string'
       && typeof email === 'string' && typeof passwordVerif === 'string') {
       // Check email
       if (!/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-        .test(email)) { res.status(404).send({ message: 'Enter a valid email' }); }
+        .test(email)) { return res.status(404).send({ message: 'Enter a valid email' }); }
 
       // Check longueur noms
-      if (firstname.length > 60 || name.length > 60 || password > 40) { res.status(400).send({ message: 'Too long firstname or name or password!' }); }
+      if (firstname.length > 60 || name.length > 60 || password.length > 40) { return res.status(400).send({ message: 'Too long firstname or name or password!' }); }
 
       // Check passwords
-      if (passwordVerif !== password) { res.status(400).send({ message: 'Passwords don\'t match' }); }
+      if (passwordVerif !== password) { return res.status(400).send({ message: 'Passwords don\'t match' }); }
 
       // SignUp
-      authController.signUp(firstname, name, password, email, res);
-    } else {
-      res.status(400).send({ message: 'bad parameters' });
+      // res.status(400).send('OK !!!');
+      return authController.signUp(firstname, name, password, email, res);
     }
+    return res.status(400).send({ error: 'bad parameters' });
   }
   bodyparser(req, callback);
 });
