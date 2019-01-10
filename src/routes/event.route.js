@@ -49,13 +49,20 @@ router.route('/relatedProfileEvents').get((req, res) => {
  */
 router.route('/addEvent').get((req, res) => {
   // Check if admin with token
-  const WT = req.params.WT;
+  const { WT } = req.query;
   if (webtoken.verifyToken(WT)) {
     const decodeWT = webtoken.decode(WT);
     if (decodeWT && decodeWT.paylaod.admin) {
       res.status(200).send('Authorized!!');
     }
   }
+});
+
+// Middleware qui check le webtoken
+router.use((req, res, next) => {
+  // Verification Webtoken
+  if (!webtoken.verifyToken(req.header.WT)) { return res.status(401).send('User not auhtentified'); }
+  return next();
 });
 
 export default router;

@@ -12,7 +12,7 @@ const router = Router();
  *  - name
  */
 router.route('/userProfile').get((req, res) => {
-  const { WT, email } = req.query;
+  const { email } = req.query;
 
   // Check parameters
   if (!email || typeof email !== typeof 'string') { return res.status(400).send('Bad parameters'); }
@@ -30,8 +30,19 @@ router.route('/userProfile').get((req, res) => {
 /**
  * update the picture of the user
  */
-router.route('/updatePicture').post((req, res) => {
+router.route('/updateTags').post((req, res) => {
+  const { email, tags } = req.query;
 
+  // Check parameters
+  if (!email || !tags || typeof email !== typeof 'string') { return res.status(400).send('Bad parameters'); }
+
+  // TODO vérifier tags
+
+  const cb = (err, updateProfile) => {
+    if (err) { return res.status(400).send({ error: err }); }
+    return res.status(200).send({ message: updateProfile });
+  };
+  return dbService.updateTags(email, tags, cb);
 });
 
 /**
@@ -39,6 +50,12 @@ router.route('/updatePicture').post((req, res) => {
  */
 router.route('/updatePreferences').post((req, res) => {
 
+});
+
+// Middleware qui check le webtoken
+router.use((req, res, next) => {
+  if (!webtoken.verifyToken(req.header.WT)) { return res.status(401).send('User not auhtentified'); }
+  return next();
 });
 
 export default router;

@@ -116,6 +116,25 @@ const dbService = {
       callback('Error append when getProfileUser', null);
     });
   },
+
+  updateTags(email, tags, callback) {
+    const request = `
+      SELECT p."PROFILE_TAG" FROM "PROFILE" AS p
+      JOIN "USER" AS u ON u."USER_PROFILE" = p."ID_PROFILE"
+      AND u."USER_EMAIL" = '${email}'`;
+    dbconnexion.db.query(request).then((result) => {
+      if (result[0].length !== 0) {
+        dbconnexion.tag.create({
+          ID_TAG: result[0],
+          TAG_TEXT: 'hello',
+        });
+      }
+      return callback('No tags update', null);
+    }).catch((err) => {
+      console.error(err);
+      callback('Error when update tags', null);
+    });
+  },
 };
 
 export default dbService;

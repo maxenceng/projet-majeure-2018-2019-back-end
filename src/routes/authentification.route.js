@@ -35,11 +35,9 @@ router.route('/signIn').get((req, res) => {
  */
 router.route('/signUp').post((req, res) => {
   function callback(body) {
-    const password = body.password;
-    const passwordVerif = body.passwordVerif;
-    const email = body.email;
-    const firstname = body.firstname;
-    const name = body.name;
+    const {
+      name, firstname, email, password, passwordVerif,
+    } = body;
 
     // Missing parameters check
     if (!firstname || !name || !password || !email || !passwordVerif) { return res.status(400).send({ message: 'missing parameters' }); }

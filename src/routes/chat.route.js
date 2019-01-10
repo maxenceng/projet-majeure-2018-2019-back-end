@@ -7,7 +7,7 @@ const router = Router();
  * Route pour avoir tous les messages d'un utilisateur
  */
 router.route('/allMessages').get((req, res) => {
-  const { email, WT } = req.query;
+  const { email } = req.query;
 
   // On vérifie le token TODO Décocher en prod
   // if (!webtoken.verifyToken(WT))
@@ -21,6 +21,12 @@ router.route('/allMessages').get((req, res) => {
     return res.status(200).send({ messages });
   };
   return chat.getMessages(email, cb);
+});
+
+// Middleware qui check le webtoken
+router.use((req, res, next) => {
+  if (!webtoken.verifyToken(req.header.WT)) { return res.status(401).send('User not auhtentified'); }
+  return next();
 });
 
 export default router;
