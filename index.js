@@ -5,6 +5,7 @@ import io from 'socket.io';
 import defaultRouter from './src/routes/default.route';
 import authRouter from './src/routes/authentification.route';
 import chatRouter from './src/routes/chat.route';
+import userRouter from './src/routes/user.route';
 
 // TODO
 // process.env.CONFIG = JSON.stringify(CONFIG);
@@ -23,6 +24,7 @@ class Server {
     this.app.use(defaultRouter);
     this.app.use(authRouter);
     this.app.use(chatRouter);
+    this.app.use(userRouter);
   }
 }
 

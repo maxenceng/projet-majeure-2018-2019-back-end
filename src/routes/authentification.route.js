@@ -9,8 +9,7 @@ const router = Router();
  * Route Signin pour le site, vérifie tous les paramètres sont présents
  */
 router.route('/signIn').get((req, res) => {
-  const email = req.query.email;
-  const password = req.query.password;
+  const { email, password } = req.query;
 
   // Check missing parameters
   if (!email || !password) { return res.status(404).send({ message: 'Missing parameters' }); }

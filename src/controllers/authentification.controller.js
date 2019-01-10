@@ -28,7 +28,7 @@ const authController = {
       const WT = webtoken.signToken(payload);
       return res.status(200).send({ message: 'signUp', token: WT });
     };
-    dbService.createUser(firstname, name, email, password, null, cb);
+    dbService.createUser(firstname, name, email, password, cb);
   },
 };
 

@@ -12,7 +12,7 @@ export default class ChatRoutes {
         console.log(`New WebSocket Client : ${socket.id}`);
       });
 
-      socket.on('signIn', (data) => {
+      socket.on('chatConnection', (data) => {
         // On stocke la personne avec son email en clef, son id de socket en param
         if (data.email) {
           this.usersConnected[data.email] = { socketId: socket.id };
@@ -24,7 +24,7 @@ export default class ChatRoutes {
 
       socket.on('sendMessage', (data) => {
         // Si la personne est connectée on lui envoie immédiatement
-        const dest = this.usersConnected[data.dest];
+        const dest = this.usersConnected[data.destEmail];
         if (dest) { this.io.to(`${dest.socketId}`).emit('message', { exp: data.exp, message: data.message }); }
         const cb = (err) => {
           if (err) { return socket.emit('sendMessage', { error: 'Not able to send message' }); }
