@@ -58,11 +58,4 @@ router.route('/addEvent').get((req, res) => {
   }
 });
 
-// Middleware qui check le webtoken
-router.use((req, res, next) => {
-  // Verification Webtoken
-  if (!webtoken.verifyToken(req.header.WT)) { return res.status(401).send('User not auhtentified'); }
-  return next();
-});
-
 export default router;

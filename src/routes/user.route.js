@@ -17,9 +17,6 @@ router.route('/userProfile').get((req, res) => {
   // Check parameters
   if (!email || typeof email !== typeof 'string') { return res.status(400).send('Bad parameters'); }
 
-  // Verify token
-  // if (!webtoken.verifyToken(WT)) { return res.status(401).send('User not auhtentified'); }
-
   const cb = (err, profile) => {
     if (err) { return res.status(400).send({ error: err }); }
     return res.status(200).send({ message: profile });
@@ -50,12 +47,6 @@ router.route('/updateTags').post((req, res) => {
  */
 router.route('/updatePreferences').post((req, res) => {
 
-});
-
-// Middleware qui check le webtoken
-router.use((req, res, next) => {
-  if (!webtoken.verifyToken(req.header.WT)) { return res.status(401).send('User not auhtentified'); }
-  return next();
 });
 
 export default router;

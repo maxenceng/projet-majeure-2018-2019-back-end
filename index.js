@@ -23,6 +23,8 @@ class Server {
   initRoutesREST() {
     this.app.use(defaultRouter);
     this.app.use(authRouter);
+
+    // Protected routes
     this.app.use(chatRouter);
     this.app.use(userRouter);
   }

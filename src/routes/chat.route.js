@@ -25,8 +25,11 @@ router.route('/allMessages').get((req, res) => {
 
 // Middleware qui check le webtoken
 router.use((req, res, next) => {
-  if (!webtoken.verifyToken(req.header.WT)) { return res.status(401).send('User not auhtentified'); }
-  return next();
+  const auth = req.headers.authorization;
+  if (auth && webtoken.verifyToken(auth.split(' ')[1])) {
+    return next();
+  }
+  return res.status(401).send('User not authentified');
 });
 
 export default router;

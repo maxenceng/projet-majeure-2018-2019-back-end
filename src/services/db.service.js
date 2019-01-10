@@ -23,7 +23,7 @@ const dbService = {
     });
   },
 
-  createUser(firstname, name, pwd, email, callback) {
+  createUser(firstname, name, email, pwd, callback) {
     // password hashé sale!
     const hash = crypto.createHash('sha256');
     hash.update(pwd + email);
@@ -122,14 +122,29 @@ const dbService = {
       SELECT p."PROFILE_TAG" FROM "PROFILE" AS p
       JOIN "USER" AS u ON u."USER_PROFILE" = p."ID_PROFILE"
       AND u."USER_EMAIL" = '${email}'`;
+    // On cherche l'id du profil corrspondant à l'email
     dbconnexion.db.query(request).then((result) => {
       if (result[0].length !== 0) {
-        dbconnexion.tag.create({
-          ID_TAG: result[0],
-          TAG_TEXT: 'hello',
-        });
+        // On delete tous les anciens tags
+        dbconnexion.db.query(`DELETE FROM "TAG" WHERE "ID_TAG" = '${result[0]}'`)
+          .then(() => {
+            // On recréé tous les nouveaux tags
+            tags.forEach((tag) => {
+              dbconnexion.tag.create({
+                ID_TAG: result[0],
+                TAG_TEXT: tag,
+              }).catch((err) => {
+                console.error(err);
+                return callback(err);
+              });
+            });
+          }).catch((err) => {
+            console.error(err);
+            return callback(err);
+          });
+        return callback(null);
       }
-      return callback('No tags update', null);
+      return callback('No tags update');
     }).catch((err) => {
       console.error(err);
       callback('Error when update tags', null);
