@@ -2,6 +2,7 @@
 import express from 'express';
 import http from 'http';
 import io from 'socket.io';
+import bodyParser from 'body-parser';
 import defaultRouter from './src/routes/default.route';
 import authRouter from './src/routes/authentification.route';
 import chatRouter from './src/routes/chat.route';
@@ -16,6 +17,7 @@ class Server {
     const server = http.createServer(this.app);
     this.io = io(server);
     this.app.listen(port, () => {
+      this.app.use(bodyParser.json());
       this.initRoutesREST();
     });
   }

@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import DBConnexion from '../middlewares/db';
 import uniqueId from '../utils/uniqueId';
+import { link } from 'fs';
 
 const dbconnexion = new DBConnexion();
 
@@ -118,6 +119,7 @@ const dbService = {
   },
 
   updateTags(email, tags, callback) {
+    console.log(tags);
     const request = `
       SELECT p."PROFILE_TAG" FROM "PROFILE" AS p
       JOIN "USER" AS u ON u."USER_PROFILE" = p."ID_PROFILE"
@@ -125,13 +127,14 @@ const dbService = {
     // On cherche l'id du profil corrspondant à l'email
     dbconnexion.db.query(request).then((result) => {
       if (result[0].length !== 0) {
+        const profileTag = result[0][0].PROFILE_TAG;
         // On delete tous les anciens tags
-        dbconnexion.db.query(`DELETE FROM "TAG" WHERE "ID_TAG" = '${result[0]}'`)
+        dbconnexion.db.query(`DELETE FROM "TAG" WHERE "ID_TAG" = '${profileTag}'`)
           .then(() => {
             // On recréé tous les nouveaux tags
             tags.forEach((tag) => {
               dbconnexion.tag.create({
-                ID_TAG: result[0],
+                ID_TAG: profileTag,
                 TAG_TEXT: tag,
               }).catch((err) => {
                 console.error(err);
@@ -150,6 +153,38 @@ const dbService = {
       callback('Error when update tags', null);
     });
   },
+
+  async updateDescription(email, description) {
+    const request = `
+      UPDATE "PROFILE" AS p
+      SET "PROFILE_DESC" = '${description}'
+      FROM "USER" AS u
+      WHERE p."ID_PROFILE" = u."USER_PROFILE"
+      AND u."USER_EMAIL" = '${email}'`;
+    // On update la description de l'utilisateur
+    try {
+      await dbconnexion.db.query(request);
+      return { err: null, message: 'Description updated!' };
+    } catch (e) {
+      return ({ err: 'Error during description update', message: '' });
+    }
+  },
+
+  async updateProfilePicture(email, linkPicture) {
+    const request = `
+      UPDATE "PROFILE" AS p
+      SET "PROFILE_AVATAR" = '${email}'
+      FROM "USER" AS u
+      WHERE p."ID_PROFILE" = u."USER_PROFILE"
+      AND u."USER_EMAIL" = '${linkPicture}'`;
+    // On update la description de l'utilisateur
+    try {
+      await dbconnexion.db.query(request);
+      return { err: null, message: 'link picture profile updated!' };
+    } catch (e) {
+      return ({ err: 'Error during picture prodile update', message: '' });
+    }
+  }
 };
 
 export default dbService;
