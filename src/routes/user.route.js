@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import dbService from '../services/db.service';
-import bodypaser from '../utils/bodyparser';
 
 const router = Router();
 
@@ -28,22 +27,19 @@ router.route('/userProfile').get((req, res) => {
  * update the picture of the user
  */
 router.route('/updateTags').post((req, res) => {
-  const callback = (body) => {
-    const { email, tags } = body;
+  const { email, tags } = req.body;
 
-    // Check parameters
-    if (!email || !tags) { return res.status(400).send('Missing Parameters'); }
+  // Check parameters
+  if (!email || !tags) { return res.status(400).send('Missing Parameters'); }
 
-    // Check types
-    if (typeof email !== 'string' || !Array.isArray(tags)) { return res.status(400).send('Bad parameters'); }
+  // Check types
+  if (typeof email !== 'string' || !Array.isArray(tags)) { return res.status(400).send('Bad parameters'); }
 
-    const cb = (err, updateProfile) => {
-      if (err) { return res.status(400).send({ error: err }); }
-      return res.status(200).send({ message: updateProfile });
-    };
-    return dbService.updateTags(email, tags, cb);
+  const cb = (err, updateProfile) => {
+    if (err) { return res.status(400).send({ error: err }); }
+    return res.status(200).send({ message: updateProfile });
   };
-  bodypaser(req, callback);
+  return dbService.updateTags(email, tags, cb);
 });
 
 /**

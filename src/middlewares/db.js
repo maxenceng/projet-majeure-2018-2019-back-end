@@ -10,6 +10,7 @@ class DBConnexion {
       configServer.config.user,
       configServer.config.mdp, {
         host: configServer.config.address,
+        port: configServer.config.port,
         dialect: 'postgres',
         operatorsAliases: false,
         pool: {
@@ -62,7 +63,8 @@ class DBConnexion {
   model() {
     this.tag = this.db.define('TAG', {
       ID_TAG: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.DataTypes.UUID,
+        defaultValue: Sequelize.DataTypes.UUIDV4,
         primaryKey: true,
         allowNull: false,
       },
@@ -75,14 +77,18 @@ class DBConnexion {
 
     this.profile = this.db.define('PROFILE', {
       ID_PROFILE: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.DataTypes.UUID,
+        defaultValue: Sequelize.DataTypes.UUIDV4,
         primaryKey: true,
         allowNull: false,
       },
       PROFILE_DESC: Sequelize.STRING,
       // wtf type
       PROFILE_AVATAR: Sequelize.STRING,
-      PROFILE_TAG: { type: Sequelize.DataTypes.UUID, references: { model: this.tag, key: 'ID_TAG', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE } },
+      PROFILE_TAG: {
+        type: Sequelize.DataTypes.UUID,
+        references: { model: this.tag, key: 'ID_TAG', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE },
+      },
     }, {
       freezeTableName: true,
       timestamps: false,
@@ -90,13 +96,14 @@ class DBConnexion {
 
     this.location = this.db.define('LOCATION', {
       ID_LOCATION: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.DataTypes.UUID,
+        defaultValue: Sequelize.DataTypes.UUIDV4,
         primaryKey: true,
         allowNull: false,
       },
-      LOC_DISTRICT: Sequelize.BIGINT,
+      LOC_DISCTRICT: Sequelize.BIGINT,
       LOC_LONGITUDE: { type: Sequelize.NUMERIC, validate: { max: 180, min: -180 } },
-      LOC_ATTITUDE: { type: Sequelize.NUMERIC, validate: { max: 90, min: -90 } },
+      LOC_LATITUDE: { type: Sequelize.NUMERIC, validate: { max: 90, min: -90 } },
     }, {
       freezeTableName: true,
       timestamps: false,
@@ -117,8 +124,9 @@ class DBConnexion {
     });
 
     this.media = this.db.define('MEDIA', {
-      IID_MEDIA: {
-        type: Sequelize.INTEGER,
+      ID_MEDIA: {
+        type: Sequelize.DataTypes.UUID,
+        defaultValue: Sequelize.DataTypes.UUIDV4,
         primaryKey: true,
         allowNull: false,
       },
@@ -132,7 +140,8 @@ class DBConnexion {
 
     this.user = this.db.define('USER', {
       ID_USER: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.DataTypes.UUID,
+        defaultValue: Sequelize.DataTypes.UUIDV4,
         primaryKey: true,
         allowNull: false,
       },
@@ -141,7 +150,10 @@ class DBConnexion {
       // wtf type
       USER_EMAIL: { type: Sequelize.STRING, validate: { isEmail: true } },
       USER_PWD: Sequelize.STRING,
-      USER_PROFILE: { type: Sequelize.DataTypes.UUID, references: { model: this.profile, key: 'ID_PROFILE', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE } },
+      USER_PROFILE: {
+        type: Sequelize.DataTypes.UUID,
+        references: { model: this.profile, key: 'ID_PROFILE', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE },
+      },
     }, {
       freezeTableName: true,
       timestamps: false,
@@ -149,7 +161,8 @@ class DBConnexion {
 
     this.event = this.db.define('EVENT', {
       ID_EVENT: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.DataTypes.UUID,
+        defaultValue: Sequelize.DataTypes.UUIDV4,
         primaryKey: true,
         allowNull: false,
       },

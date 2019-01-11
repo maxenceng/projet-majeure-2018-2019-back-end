@@ -8,9 +8,11 @@ import defaultRouter from './src/routes/default.route';
 import authRouter from './src/routes/authentification.route';
 import chatRouter from './src/routes/chat.route';
 import userRouter from './src/routes/user.route';
+import eventRouter from './src/routes/event.route';
 
-// TODO
-// process.env.CONFIG = JSON.stringify(CONFIG);
+const corsOptions = {
+  origin: 'http://example.com',
+};
 
 class Server {
   constructor(port) {
@@ -31,6 +33,7 @@ class Server {
     // Protected routes
     this.app.use(userRouter);
     this.app.use(chatRouter);
+    this.app.use(eventRouter);
   }
 }
 

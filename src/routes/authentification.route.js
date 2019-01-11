@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import authController from '../controllers/authentification.controller';
 import webtoken from '../middlewares/webtoken';
-import bodyparser from '../utils/bodyparser';
 
 const router = Router();
 // TODO Transmettre la DB au controller
@@ -62,9 +61,9 @@ router.route('/signUp').post((req, res) => {
 });
 
 // Route test, à supprimmer
-router.route('/deliverToken').get((req, res) => {
+router.route('/deliverAdminToken').get((req, res) => {
   const payload = {
-    admin: false,
+    admin: true,
   };
   res.send(webtoken.signToken(payload));
 });

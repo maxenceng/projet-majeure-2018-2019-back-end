@@ -1,6 +1,6 @@
 import crypto from 'crypto';
+import uuidv4 from 'uuid/v4';
 import DBConnexion from '../middlewares/db';
-import uniqueId from '../utils/uniqueId';
 
 const dbconnexion = new DBConnexion();
 
@@ -28,37 +28,40 @@ const dbService = {
     const hash = crypto.createHash('sha256');
     hash.update(pwd + email);
     const hashpwd = hash.digest('hex');
+    const uuidTag = uuidv4();
+    const uuidProfile = uuidv4();
     // Generate unique interger
-    const uniqId = uniqueId();
     // On check si l'utilisateur existe ou non
     dbconnexion.db.query(`SELECT * FROM "USER" WHERE "USER_EMAIL" = '${email}'`).then((result) => {
       if (result[0].length === 0) {
         // Création du profil associé à l'utilisateur
-        dbconnexion.profile.create({
-          ID_PROFILE: uniqId,
-          PROFILE_DESC: 'hello',
-          PROFILE_AVATAR: 'truc',
-          PROFILE_TAG: uniqId,
+        dbconnexion.tag.create({
+          ID_TAG: uuidTag,
+          TAG_TEXT: 'tagtag',
+        }).then(() => {
+          dbconnexion.profile.create({
+            ID_PROFILE: uuidProfile,
+            PROFILE_DESC: 'hello',
+            PROFILE_AVATAR: 'truc',
+            PROFILE_TAG: uuidTag,
+          }).catch(err => callback(err));
         }).then(() => {
           // Création de l'utilisateur
           dbconnexion.user.create({
-            ID_USER: uniqId,
             USER_FIRSTNAME: firstname,
             USER_NAME: name,
             USER_EMAIL: email,
             USER_PWD: hashpwd,
-            USER_PROFILE: uniqId,
-          }).catch((err) => {
-            console.error(err);
-            callback('Error append when creating user');
-          });
+            USER_PROFILE: uuidProfile,
+          }).catch(err => callback(err));
         }).then((user) => {
           console.log(user);
           callback();
-        }).catch((err) => {
-          console.error(err);
-          callback('Error append creating profile');
-        });
+        })
+          .catch((err) => {
+            console.error(err);
+            callback('Error append creating profile');
+          });
       } else {
         callback('User already exist!');
       }
@@ -172,17 +175,99 @@ const dbService = {
   async updateProfilePicture(email, linkPicture) {
     const request = `
       UPDATE "PROFILE" AS p
-      SET "PROFILE_AVATAR" = '${email}'
+      SET "PROFILE_AVATAR" = '${linkPicture}'
       FROM "USER" AS u
       WHERE p."ID_PROFILE" = u."USER_PROFILE"
-      AND u."USER_EMAIL" = '${linkPicture}'`;
-    // On update la description de l'utilisateur
+      AND u."USER_EMAIL" = '${email}'`;
+    // On update l'image de profil de l'utilisateur
     try {
       await dbconnexion.db.query(request);
       return { err: null, message: 'link picture profile updated!' };
     } catch (e) {
       return ({ err: 'Error during picture prodile update', message: '' });
     }
+  },
+
+  async allEvents(date, location, preferences) {
+    const { lng, lat } = location;
+
+    let realDate;
+    if (!date || date < Date.now()) { realDate = Date.now(); } else {
+      realDate = date;
+    }
+
+    let request = `SELECT * FROM "EVENT" e
+    JOIN "LOCATION" l WHERE e."EVENT_LOCATION" = l."ID_LOCATION"
+    AND l."LOC_LATTITUDE" > ${lat + 1} AND l."LOC_LATTITUDE" < ${lat - 1}
+    AND l."LOC_LONGITUDE" > ${lng + 1} AND l."LOC_LONGITUDE" < ${lng - 1}
+    AND e."EVENT_DATE" > ${realDate} AND e."EVENT_DATE < ${realDate + 1000 * 3600 * 24 * 2}`;
+
+    const requestPreferences = async preference => `e."EVENT_TAG" = ${preference}`;
+
+    // TODO faire plus plusieurs préférences
+    if (preferences) {
+      request += 'AND';
+      preferences.forEach((pref) => {
+        request += `${requestPreferences(pref)}`;
+      });
+    }
+
+    try {
+      const result = await dbconnexion.db.query(request);
+      if (result[0]) {
+        return { err: null, message: 'Get events ok!', events: result[0][0] };
+      }
+      return { err: null, message: 'Get events ok!', events: null };
+    } catch (e) {
+      return ({ err: 'Error when getting events', message: '', events: '' });
+    }
+  },
+
+  async addEvent(date, location, preferences, media, eventName, eventDesc) {
+    const { lng, lat } = location;
+    const uuidLocation = uuidv4();
+    const uuidMedia = uuidv4();
+
+    let realDate;
+    if (!date || date < Date.now()) { realDate = Date.now(); } else {
+      realDate = date;
+    }
+
+    try {
+      await dbconnexion.media.create({
+        ID_MEDIA: uuidMedia,
+        MEDIA_TYPE: media.type,
+        MEDIA_CONTENT: media.content,
+      });
+    } catch (e) {
+      throw e;
+    }
+
+    try {
+      await dbconnexion.location.create({
+        ID_LOCATION: uuidLocation,
+        LOC_DISCTRICT: 0,
+        LOC_LONGITUDE: lng,
+        LOC_LATITUDE: lat,
+      });
+    } catch (e) {
+      throw e;
+    }
+
+    try {
+      await dbconnexion.event.create({
+        ID_EVENT: uuidv4,
+        EVENT_NAME: eventName,
+        EVENT_DESC: eventDesc,
+        EVENT_USER: null,
+        EVENT_LOCATION: uuidLocation,
+        EVENT_MEDIA: uuidMedia,
+      });
+    } catch (e) {
+      throw e;
+    }
+
+    return ({ message: 'create event success' });
   },
 };
 
