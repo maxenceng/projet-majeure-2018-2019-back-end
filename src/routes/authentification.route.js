@@ -34,34 +34,31 @@ router.route('/signIn').get((req, res) => {
  * et que les passwords match bien
  */
 router.route('/signUp').post((req, res) => {
-  function callback(body) {
-    const {
-      name, firstname, email, password, passwordVerif,
-    } = body;
+  const {
+    name, firstname, email, password, passwordVerif,
+  } = req.body;
 
-    // Missing parameters check
-    if (!firstname || !name || !password || !email || !passwordVerif) { return res.status(400).send({ message: 'missing parameters' }); }
+  // Missing parameters check
+  if (!firstname || !name || !password || !email || !passwordVerif) { return res.status(400).send({ message: 'missing parameters' }); }
 
-    // On vérifie le type des arguments
-    if (typeof firstname === 'string' && typeof name === 'string' && typeof password === 'string'
-      && typeof email === 'string' && typeof passwordVerif === 'string') {
-      // Check email
-      if (!/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-        .test(email)) { return res.status(404).send({ message: 'Enter a valid email' }); }
+  // On vérifie le type des arguments
+  if (typeof firstname === 'string' && typeof name === 'string' && typeof password === 'string'
+    && typeof email === 'string' && typeof passwordVerif === 'string') {
+    // Check email
+    if (!/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      .test(email)) { return res.status(404).send({ message: 'Enter a valid email' }); }
 
-      // Check longueur noms
-      if (firstname.length > 60 || name.length > 60 || password.length > 40) { return res.status(400).send({ message: 'Too long firstname or name or password!' }); }
+    // Check longueur noms
+    if (firstname.length > 60 || name.length > 60 || password.length > 40) { return res.status(400).send({ message: 'Too long firstname or name or password!' }); }
 
-      // Check passwords
-      if (passwordVerif !== password) { return res.status(400).send({ message: 'Passwords don\'t match' }); }
+    // Check passwords
+    if (passwordVerif !== password) { return res.status(400).send({ message: 'Passwords don\'t match' }); }
 
-      // SignUp
-      // res.status(400).send('OK !!!');
-      return authController.signUp(firstname, name, password, email, res);
-    }
-    return res.status(400).send({ error: 'bad parameters' });
+    // SignUp
+    // res.status(400).send('OK !!!');
+    return authController.signUp(firstname, name, password, email, res);
   }
-  bodyparser(req, callback);
+  return res.status(400).send({ error: 'bad parameters' });
 });
 
 // Route test, à supprimmer
