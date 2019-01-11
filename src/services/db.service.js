@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import DBConnexion from '../middlewares/db';
 import uniqueId from '../utils/uniqueId';
-import { link } from 'fs';
 
 const dbconnexion = new DBConnexion();
 
@@ -184,7 +183,7 @@ const dbService = {
     } catch (e) {
       return ({ err: 'Error during picture prodile update', message: '' });
     }
-  }
+  },
 };
 
 export default dbService;
