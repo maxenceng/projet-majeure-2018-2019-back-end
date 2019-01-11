@@ -29,8 +29,8 @@ class Server {
     this.app.use(authRouter);
 
     // Protected routes
-    this.app.use(chatRouter);
     this.app.use(userRouter);
+    this.app.use(chatRouter);
   }
 }
 
