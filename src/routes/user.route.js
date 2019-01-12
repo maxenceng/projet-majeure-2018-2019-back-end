@@ -10,17 +10,21 @@ const router = Router();
  *  - age
  *  - name
  */
-router.route('/userProfile').get((req, res) => {
+router.route('/userProfile').get(async (req, res) => {
   const { email } = req.query;
 
   // Check parameters
   if (!email || typeof email !== typeof 'string') { return res.status(400).send('Bad parameters'); }
-
-  const cb = (err, profile) => {
-    if (err) { return res.status(400).send({ error: err }); }
-    return res.status(200).send({ message: profile });
-  };
-  return dbService.profileUser(email, cb);
+  let profile;
+  try {
+    profile = await dbService.profileUser(email);
+  } catch (e) {
+    res.status(500).send({ err: 'Error append when getProfile' });
+  }
+  if (profile[0].length !== 0) {
+    return res.status(200).send({ profile: profile[0] });
+  }
+  return res.status(404).send({ err: 'Profile not found ' });
 });
 
 /**
