@@ -1,8 +1,17 @@
 import { Router } from 'express';
 import dbService from '../services/db.service';
-import bodypaser from '../utils/bodyparser';
+import webtoken from '../middlewares/webtoken';
 
 const router = Router();
+
+// Middleware qui check le webtoken
+router.use((req, res, next) => {
+  const auth = req.headers.authorization;
+  if (auth && webtoken.verifyToken(auth.split(' ')[1])) {
+    return next();
+  }
+  return res.status(401).send('User not authentified');
+});
 
 /**
  * get user profile with
@@ -11,75 +20,49 @@ const router = Router();
  *  - age
  *  - name
  */
-router.route('/userProfile').get((req, res) => {
+router.route('/userProfile').get(async (req, res) => {
   const { email } = req.query;
 
   // Check parameters
   if (!email || typeof email !== typeof 'string') { return res.status(400).send('Bad parameters'); }
-
-  const cb = (err, profile) => {
-    if (err) { return res.status(400).send({ error: err }); }
-    return res.status(200).send({ message: profile });
-  };
-  return dbService.profileUser(email, cb);
+  let profile;
+  try {
+    profile = await dbService.profileUser(email);
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send({ err: 'Error append when getProfile' });
+  }
+  console.log(profile);
+  if (profile && profile[0].length !== 0) {
+    return res.status(200).send({ profile: profile[0] });
+  }
+  return res.status(404).send({ err: 'Profile not found' });
 });
 
 /**
- * update the picture of the user
+ * Update tout le profil d'un utilisateur
  */
-router.route('/updateTags').post((req, res) => {
-  const callback = (body) => {
-    const { email, tags } = body;
-
-    // Check parameters
-    if (!email || !tags) { return res.status(400).send('Missing Parameters'); }
-
-    // Check types
-    if (typeof email !== 'string' || !Array.isArray(tags)) { return res.status(400).send('Bad parameters'); }
-
-    const cb = (err, updateProfile) => {
-      if (err) { return res.status(400).send({ error: err }); }
-      return res.status(200).send({ message: updateProfile });
-    };
-    return dbService.updateTags(email, tags, cb);
-  };
-  bodypaser(req, callback);
-});
-
-/**
- * update preferences
- */
-router.route('/updateDescription').post(async (req, res) => {
-  const { email, description } = req.body;
+router.route('/updateProfile').post(async (req, res) => {
+  const {
+    email, tags, description, linkPicture,
+  } = req.body;
 
   // Check parameters
-  if (!email || !description) { return res.status(400).send('Missing Parameters'); }
+  if (!email || !tags || !description || !linkPicture) { return res.status(400).send('Missing Parameters'); }
 
   // Check types
-  if (typeof email !== 'string' || typeof description !== 'string') { return res.status(400).send('Bad parameters'); }
+  if (typeof email !== 'string' || !Array.isArray(tags)
+    || typeof description !== 'string' || typeof linkPicture !== 'string') {
+    return res.status(400).send('Bad parameters');
+  }
 
-  const { err, message } = await dbService.updateDescription(email, description);
-
-  if (err) { return res.status(400).send({ err }); }
-  return res.status(200).send({ message });
-});
-
-/**
- * update preferences
- */
-router.route('/updateProfilePicture').post(async (req, res) => {
-  const { email, linkPicture } = req.body;
-
-  // Check parameters
-  if (!email || !linkPicture) { return res.status(400).send('Missing Parameters'); }
-
-  // Check types
-  if (typeof email !== 'string' || typeof linkPicture !== 'string') { return res.status(400).send('Bad parameters'); }
-
-  const { err, message } = await dbService.updateProfilePicture(email, linkPicture);
-
-  if (err) { return res.status(400).send({ err }); }
-  return res.status(200).send({ message });
+  try {
+    await dbService.updateProfile(email, linkPicture, description, tags);
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send({ err: 'Error when updating the profile of the user' });
+  }
+  return res.status(200).send({ message: 'Profile updated!' });
 });
 
 export default router;

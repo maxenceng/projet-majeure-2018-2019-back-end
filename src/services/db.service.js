@@ -1,6 +1,6 @@
 import crypto from 'crypto';
+import uuidv4 from 'uuid/v4';
 import DBConnexion from '../middlewares/db';
-import uniqueId from '../utils/uniqueId';
 
 const dbconnexion = new DBConnexion();
 
@@ -11,58 +11,66 @@ const dbconnexion = new DBConnexion();
  * Il suffira du modifier ce service pour taper sur les routes
  */
 const dbService = {
-  getUser(email, password, callback) {
+  async getUser(email, password) {
+    // Hash du password
     const hash = crypto.createHash('sha256');
     hash.update(password + email);
     const hashpwd = hash.digest('hex');
-    dbconnexion.db.query(`SELECT * FROM "USER" WHERE "USER_PWD" = '${hashpwd}' AND "USER_EMAIL" = '${email}'`).then((result) => {
-      callback(null, result[0]);
-    }).catch((err) => {
-      console.error(err);
-      callback('Error append when signIn');
-    });
+    // Query DB
+    let result;
+    try {
+      result = await dbconnexion.db.query(`SELECT "ID_USER", "USER_NAME", "USER_FIRSTNAME", 
+      "USER_EMAIL" FROM "USER" WHERE "USER_PWD" = '${hashpwd}' AND "USER_EMAIL" = '${email}'`);
+    } catch (e) { throw e; }
+    return result;
   },
 
-  createUser(firstname, name, email, pwd, callback) {
+  async createUser(firstname, name, email, pwd) {
     // password hashé sale!
     const hash = crypto.createHash('sha256');
     hash.update(pwd + email);
     const hashpwd = hash.digest('hex');
+    const uuidUser = uuidv4();
+    const uuidProfile = uuidv4();
     // Generate unique interger
-    const uniqId = uniqueId();
     // On check si l'utilisateur existe ou non
-    dbconnexion.db.query(`SELECT * FROM "USER" WHERE "USER_EMAIL" = '${email}'`).then((result) => {
-      if (result[0].length === 0) {
-        // Création du profil associé à l'utilisateur
-        dbconnexion.profile.create({
-          ID_PROFILE: uniqId,
+    let resultExistanceUser;
+    try {
+      resultExistanceUser = await dbconnexion.db.query(`SELECT * FROM "USER" WHERE "USER_EMAIL" = '${email}'`);
+    } catch (e) {
+      throw e;
+    }
+    if (resultExistanceUser[0].length === 0) {
+      try {
+        // Création de l'utilisateur
+        await dbconnexion.user.create({
+          ID_USER: uuidUser,
+          USER_FIRSTNAME: firstname,
+          USER_NAME: name,
+          USER_EMAIL: email,
+          USER_PWD: hashpwd,
+        });
+
+        await dbconnexion.profile.create({
+          ID_PROFILE: uuidProfile,
           PROFILE_DESC: 'hello',
           PROFILE_AVATAR: 'truc',
-          PROFILE_TAG: uniqId,
-        }).then(() => {
-          // Création de l'utilisateur
-          dbconnexion.user.create({
-            ID_USER: uniqId,
-            USER_FIRSTNAME: firstname,
-            USER_NAME: name,
-            USER_EMAIL: email,
-            USER_PWD: hashpwd,
-            USER_PROFILE: uniqId,
-          }).catch((err) => {
-            console.error(err);
-            callback('Error append when creating user');
-          });
-        }).then((user) => {
-          console.log(user);
-          callback();
-        }).catch((err) => {
-          console.error(err);
-          callback('Error append creating profile');
+          PROFILE_USER: uuidUser,
         });
-      } else {
-        callback('User already exist!');
+
+        await dbconnexion.tag.create({
+          TAG_TEXT: 'tagtag',
+          TAG_PROFILE: uuidProfile,
+        });
+        // Création du profil associé à l'utilisateur
+
+        return true;
+      } catch (e) {
+        throw e;
       }
-    });
+    } else {
+      return false;
+    }
   },
 
   createMessage(message, author, destEmail, callback) {
@@ -90,7 +98,7 @@ const dbService = {
 
   getMessages(email, callback) {
     const request = `SELECT * FROM "MESSAGE" m 
-      JOIN "CONVERSATION" c ON m."ID_MESSAGE" = c."CONV_MESSAGE"
+      JOIN "CONVERSATION" c ON m."MES_CONV" = c."ID_CONVERSATION"
       JOIN "CONV_USER" cu ON cu."ID_CONV" = c."ID_CONVERSATION"
       JOIN "USER" u ON cu."ID_USER" = u."ID_USER" 
       WHERE u."USER_EMAIL" = '${email}'`;
@@ -103,86 +111,196 @@ const dbService = {
     });
   },
 
-  profileUser(email, callback) {
-    const request = `SELECT p."PROFILE_DESC", p."PROFILE_AVATAR", p."PROFILE_TAG" 
-      FROM "PROFILE" p
-      JOIN "USER" u ON p."ID_PROFILE" = u."USER_PROFILE"
+  async profileUser(email) {
+    const request = `SELECT p."PROFILE_DESC", p."PROFILE_AVATAR", t."TAG_TEXT"
+      FROM "TAG" t
+      JOIN "PROFILE" p ON t."TAG_PROFILE" = p."ID_PROFILE"
+      JOIN "USER" u ON p."PROFILE_USER" = u."ID_USER"
       WHERE u."USER_EMAIL" = '${email}'`;
-    dbconnexion.db.query(request).then((result) => {
-      if (result[0].length !== 0) { return callback(null, result[0]); }
-      return callback('No profile found for the user', null);
-    }).catch((err) => {
-      console.error(err);
-      callback('Error append when getProfileUser', null);
-    });
+    let profile;
+    try {
+      profile = await dbconnexion.db.query(request);
+    } catch (e) {
+      throw e;
+    }
+    return profile;
   },
 
-  updateTags(email, tags, callback) {
+  async updateTags(email, tags) {
     console.log(tags);
     const request = `
-      SELECT p."PROFILE_TAG" FROM "PROFILE" AS p
-      JOIN "USER" AS u ON u."USER_PROFILE" = p."ID_PROFILE"
-      AND u."USER_EMAIL" = '${email}'`;
+      SELECT p."ID_PROFILE" FROM "PROFILE" AS p
+      JOIN "USER" AS u ON u."ID_USER" = p."PROFILE_USER"
+      WHERE u."USER_EMAIL" = '${email}'`;
     // On cherche l'id du profil corrspondant à l'email
-    dbconnexion.db.query(request).then((result) => {
-      if (result[0].length !== 0) {
-        const profileTag = result[0][0].PROFILE_TAG;
-        // On delete tous les anciens tags
-        dbconnexion.db.query(`DELETE FROM "TAG" WHERE "ID_TAG" = '${profileTag}'`)
-          .then(() => {
-            // On recréé tous les nouveaux tags
-            tags.forEach((tag) => {
-              dbconnexion.tag.create({
-                ID_TAG: profileTag,
-                TAG_TEXT: tag,
-              }).catch((err) => {
-                console.error(err);
-                return callback(err);
-              });
-            });
-          }).catch((err) => {
-            console.error(err);
-            return callback(err);
-          });
-        return callback(null);
+    let result;
+    try {
+      result = await dbconnexion.db.query(request);
+    } catch (e) {
+      throw e;
+    }
+    if (result && result[0].length !== 0) {
+      const profileId = result[0][0].ID_PROFILE;
+      // On delete tous les anciens tags
+      try {
+        await dbconnexion.db.query(`DELETE FROM "TAG" WHERE "TAG_PROFILE" = '${profileId}'`);
+      } catch (e) {
+        throw e;
       }
-      return callback('No tags update');
-    }).catch((err) => {
-      console.error(err);
-      callback('Error when update tags', null);
+
+      // On recréé tous les nouveaux tags
+      tags.forEach(async (tag) => {
+        try {
+          await dbconnexion.tag.create({
+            TAG_TEXT: tag,
+            TAG_PROFILE: profileId,
+          });
+        } catch (e) {
+          throw e;
+        }
+      });
+    } else {
+      throw new Error('Profile not found');
+    }
+  },
+
+  async updateProfile(email, linkPicture, description, tags) {
+    const request = `
+    UPDATE "PROFILE" AS p
+    SET "PROFILE_DESC" = '${description}', 
+    "PROFILE_AVATAR" = '${linkPicture}'
+    FROM "USER" AS u
+    WHERE p."PROFILE_USER" = u."ID_USER"
+    AND u."USER_EMAIL" = '${email}'`;
+    // On update la description de l'utilisateur
+    try {
+      await dbconnexion.db.query(request);
+    } catch (e) {
+      throw e;
+    }
+
+    const requestTags = `
+      SELECT p."ID_PROFILE" FROM "PROFILE" AS p
+      JOIN "USER" AS u ON u."ID_USER" = p."PROFILE_USER"
+      WHERE u."USER_EMAIL" = '${email}'`;
+    // On cherche l'id du profil corrspondant à l'email
+    let result;
+    try {
+      result = await dbconnexion.db.query(requestTags);
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+    if (result && result[0].length !== 0) {
+      const profileId = result[0][0].ID_PROFILE;
+      // On delete tous les anciens tags
+      try {
+        await dbconnexion.db.query(`DELETE FROM "TAG" WHERE "TAG_PROFILE" = '${profileId}'`);
+      } catch (e) {
+        throw e;
+      }
+
+      // On recréé tous les nouveaux tags
+      tags.forEach(async (tag) => {
+        try {
+          await dbconnexion.tag.create({
+            TAG_TEXT: tag,
+            TAG_PROFILE: profileId,
+          });
+        } catch (e) {
+          throw e;
+        }
+      });
+    } else {
+      throw new Error('Profile not found');
+    }
+  },
+
+  async allEvents(date, location, tags) {
+    const { lng, lat } = location;
+
+    let realDate;
+    if (!date || date < Date.now()) { realDate = Date.now(); } else {
+      realDate = date;
+    }
+
+    let request = `SELECT * FROM "EVENT" e
+    JOIN "LOCATION" l ON e."ID_EVENT" = l."LOC_EVENT"
+    AND l."LOC_LATITUDE" < ${lat + 1} AND l."LOC_LATITUDE" > ${lat - 1}
+    AND l."LOC_LONGITUDE" < ${lng + 1} AND l."LOC_LONGITUDE" > ${lng - 1}
+    AND e."EVENT_DATE" > ${realDate} AND e."EVENT_DATE" < ${realDate + 1000 * 3600 * 24 * 10}`;
+
+    const requestPreferences = async preference => `e."EVENT_TAG" = ${preference} OR`;
+
+    // TODO faire plus plusieurs préférences
+    if (tags) {
+      request += 'AND';
+      tags.forEach(async (pref) => {
+        request += await requestPreferences(pref);
+      });
+      request = request.substring(0, request.length - 3);
+    }
+
+    try {
+      return await dbconnexion.db.query(request);
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  async addEvent(date, location, tags, media, eventName, eventDesc) {
+    const { lng, lat } = location;
+    const uuidEvent = uuidv4();
+
+    let realDate;
+    if (!date || date < Date.now()) { realDate = Date.now(); } else {
+      realDate = date;
+    }
+
+    try {
+      await dbconnexion.event.create({
+        ID_EVENT: uuidEvent,
+        EVENT_NAME: eventName,
+        EVENT_DESC: eventDesc,
+        EVENT_DATE: realDate,
+      });
+    } catch (e) {
+      throw e;
+    }
+
+    try {
+      await dbconnexion.location.create({
+        LOC_EVENT: uuidEvent,
+        LOC_DISCTRICT: 0,
+        LOC_LONGITUDE: lng,
+        LOC_LATITUDE: lat,
+      });
+    } catch (e) {
+      throw e;
+    }
+
+    try {
+      await dbconnexion.media.create({
+        MEDIA_EVENT: uuidEvent,
+        MEDIA_TYPE: media.type,
+        MEDIA_CONTENT: media.content,
+      });
+    } catch (e) {
+      throw e;
+    }
+
+    tags.forEach(async (tag) => {
+      try {
+        await dbconnexion.tag.create({
+          TAG_EVENT: uuidEvent,
+          TAG_TEXT: tag,
+        });
+      } catch (e) {
+        throw e;
+      }
     });
-  },
 
-  async updateDescription(email, description) {
-    const request = `
-      UPDATE "PROFILE" AS p
-      SET "PROFILE_DESC" = '${description}'
-      FROM "USER" AS u
-      WHERE p."ID_PROFILE" = u."USER_PROFILE"
-      AND u."USER_EMAIL" = '${email}'`;
-    // On update la description de l'utilisateur
-    try {
-      await dbconnexion.db.query(request);
-      return { err: null, message: 'Description updated!' };
-    } catch (e) {
-      return ({ err: 'Error during description update', message: '' });
-    }
-  },
-
-  async updateProfilePicture(email, linkPicture) {
-    const request = `
-      UPDATE "PROFILE" AS p
-      SET "PROFILE_AVATAR" = '${email}'
-      FROM "USER" AS u
-      WHERE p."ID_PROFILE" = u."USER_PROFILE"
-      AND u."USER_EMAIL" = '${linkPicture}'`;
-    // On update la description de l'utilisateur
-    try {
-      await dbconnexion.db.query(request);
-      return { err: null, message: 'link picture profile updated!' };
-    } catch (e) {
-      return ({ err: 'Error during picture prodile update', message: '' });
-    }
+    return true;
   },
 };
 
