@@ -1,4 +1,4 @@
-import chat from '../services/db.service';
+import dbService from '../services/db.service';
 
 export default class ChatRoutes {
   constructor(io) {
@@ -14,29 +14,32 @@ export default class ChatRoutes {
 
       socket.on('chatConnection', (data) => {
         // On stocke la personne avec son email en clef, son id de socket en param
-        if (data.email) {
-          this.usersConnected[data.email] = { socketId: socket.id };
+        if (data.idUser) {
+          this.usersConnected[data.idUser] = { socketId: socket.id };
+          socket.emit({ message: 'Connexion Chat success' });
         } else {
+          socket.emit({ err: 'Connexion Chat Error, No iduser found' });
           // On envoie un petit signal au client pour lui dire que c'est la merde
           // TODO
         }
       });
 
-      socket.on('sendMessage', (data) => {
+      socket.on('sendMessage', async (data) => {
         // Si la personne est connectée on lui envoie immédiatement
-        const dest = this.usersConnected[data.destEmail];
+        if (!data.idDest) { return socket.emit({ err: 'No id for receiver found' }); }
+        const dest = this.usersConnected[data.idDest];
         if (dest) { this.io.to(`${dest.socketId}`).emit('message', { exp: data.exp, message: data.message }); }
-        const cb = (err) => {
-          if (err) { return socket.emit('sendMessage', { error: 'Not able to send message' }); }
-          return socket.emit('sendMessage', { message: 'Message well sent' });
-        };
         // Stockage base de données
-        chat.createMessage(data.message, data.exp, data.dest, cb);
+        try {
+          await dbService.createMessage(data.message, data.exp, data.dest);
+          return socket.emit('sendMessageRet', { message: 'Message well send' });
+        } catch (e) {
+          return socket.emit('sendMessageRet', { err: 'Error when saving message in database' });
+        }
       });
 
       socket.on('disconnect', () => {
         // On retire la personne des personnes connectées
-        let userDisconnected;
         const keys = Object.keys(this.usersConnected);
         keys.forEach((key) => {
           if (this.usersConnected[key].socketId === socket.id) {

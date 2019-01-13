@@ -20,7 +20,7 @@ router.route('/allEvents').get(async (req, res) => {
   try {
     locationObj = JSON.parse(location);
   } catch (e) {
-    console.log(e);
+    console.error(e);
     return res.status(400).send({ err: 'Location is missing or malformed' });
   }
 
