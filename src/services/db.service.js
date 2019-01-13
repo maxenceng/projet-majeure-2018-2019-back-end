@@ -19,7 +19,7 @@ const dbService = {
     // Query DB
     let result;
     try {
-      result = await dbconnexion.db.query(`SELECT "ID_USER", "USER_NAME", "USER_FIRSTNAME", "USER_PROFILE", 
+      result = await dbconnexion.db.query(`SELECT "ID_USER", "USER_NAME", "USER_FIRSTNAME", 
       "USER_EMAIL" FROM "USER" WHERE "USER_PWD" = '${hashpwd}' AND "USER_EMAIL" = '${email}'`);
     } catch (e) { throw e; }
     return result;
@@ -30,7 +30,7 @@ const dbService = {
     const hash = crypto.createHash('sha256');
     hash.update(pwd + email);
     const hashpwd = hash.digest('hex');
-    const uuidTag = uuidv4();
+    const uuidUser = uuidv4();
     const uuidProfile = uuidv4();
     // Generate unique interger
     // On check si l'utilisateur existe ou non
@@ -42,25 +42,28 @@ const dbService = {
     }
     if (resultExistanceUser[0].length === 0) {
       try {
-        await dbconnexion.tag.create({
-          ID_TAG: uuidTag,
-          TAG_TEXT: 'tagtag',
-        });
-        // Création du profil associé à l'utilisateur
-        await dbconnexion.profile.create({
-          ID_PROFILE: uuidProfile,
-          PROFILE_DESC: 'hello',
-          PROFILE_AVATAR: 'truc',
-          PROFILE_TAG: uuidTag,
-        });
         // Création de l'utilisateur
         await dbconnexion.user.create({
+          ID_USER: uuidUser,
           USER_FIRSTNAME: firstname,
           USER_NAME: name,
           USER_EMAIL: email,
           USER_PWD: hashpwd,
-          USER_PROFILE: uuidProfile,
         });
+
+        await dbconnexion.profile.create({
+          ID_PROFILE: uuidProfile,
+          PROFILE_DESC: 'hello',
+          PROFILE_AVATAR: 'truc',
+          PROFILE_USER: uuidUser,
+        });
+
+        await dbconnexion.tag.create({
+          TAG_TEXT: 'tagtag',
+          TAG_PROFILE: uuidProfile,
+        });
+        // Création du profil associé à l'utilisateur
+
         return true;
       } catch (e) {
         throw e;
@@ -95,7 +98,7 @@ const dbService = {
 
   getMessages(email, callback) {
     const request = `SELECT * FROM "MESSAGE" m 
-      JOIN "CONVERSATION" c ON m."ID_MESSAGE" = c."CONV_MESSAGE"
+      JOIN "CONVERSATION" c ON m."MES_CONV" = c."ID_CONVERSATION"
       JOIN "CONV_USER" cu ON cu."ID_CONV" = c."ID_CONVERSATION"
       JOIN "USER" u ON cu."ID_USER" = u."ID_USER" 
       WHERE u."USER_EMAIL" = '${email}'`;
@@ -109,9 +112,10 @@ const dbService = {
   },
 
   async profileUser(email) {
-    const request = `SELECT p."PROFILE_DESC", p."PROFILE_AVATAR", p."PROFILE_TAG" 
-      FROM "PROFILE" p
-      JOIN "USER" u ON p."ID_PROFILE" = u."USER_PROFILE"
+    const request = `SELECT p."PROFILE_DESC", p."PROFILE_AVATAR", t."TAG_TEXT"
+      FROM "TAG" t
+      JOIN "PROFILE" p ON t."TAG_PROFILE" = p."ID_PROFILE"
+      JOIN "USER" u ON p."PROFILE_USER" = u."ID_USER"
       WHERE u."USER_EMAIL" = '${email}'`;
     let profile;
     try {
@@ -126,7 +130,7 @@ const dbService = {
     console.log(tags);
     const request = `
       SELECT p."PROFILE_TAG" FROM "PROFILE" AS p
-      JOIN "USER" AS u ON u."USER_PROFILE" = p."ID_PROFILE"
+      JOIN "USER" AS u ON u."ID_USER" = p."PROFILE_USER"
       AND u."USER_EMAIL" = '${email}'`;
     // On cherche l'id du profil corrspondant à l'email
     dbconnexion.db.query(request).then((result) => {
@@ -158,35 +162,19 @@ const dbService = {
     });
   },
 
-  async updateDescription(email, description) {
+  async updateProfile(email, linkPicture, description, tags) {
     const request = `
-      UPDATE "PROFILE" AS p
-      SET "PROFILE_DESC" = '${description}'
-      FROM "USER" AS u
-      WHERE p."ID_PROFILE" = u."USER_PROFILE"
-      AND u."USER_EMAIL" = '${email}'`;
+    UPDATE "PROFILE" AS p
+    SET "PROFILE_DESC" = '${description}', 
+    "PROFILE_AVATAR" = '${linkPicture}'
+    FROM "USER" AS u
+    WHERE p."PROFILE_USER" = u."ID_USER"
+    AND u."USER_EMAIL" = '${email}'`;
     // On update la description de l'utilisateur
     try {
       await dbconnexion.db.query(request);
-      return { err: null, message: 'Description updated!' };
     } catch (e) {
-      return ({ err: 'Error during description update', message: '' });
-    }
-  },
-
-  async updateProfilePicture(email, linkPicture) {
-    const request = `
-      UPDATE "PROFILE" AS p
-      SET "PROFILE_AVATAR" = '${linkPicture}'
-      FROM "USER" AS u
-      WHERE p."ID_PROFILE" = u."USER_PROFILE"
-      AND u."USER_EMAIL" = '${email}'`;
-    // On update l'image de profil de l'utilisateur
-    try {
-      await dbconnexion.db.query(request);
-      return { err: null, message: 'link picture profile updated!' };
-    } catch (e) {
-      return ({ err: 'Error during picture prodile update', message: '' });
+      throw e;
     }
   },
 
@@ -199,7 +187,7 @@ const dbService = {
     }
 
     let request = `SELECT * FROM "EVENT" e
-    JOIN "LOCATION" l WHERE e."EVENT_LOCATION" = l."ID_LOCATION"
+    JOIN "LOCATION" l WHERE e."ID_EVENT" = l."LOC_EVENT"
     AND l."LOC_LATTITUDE" > ${lat + 1} AND l."LOC_LATTITUDE" < ${lat - 1}
     AND l."LOC_LONGITUDE" > ${lng + 1} AND l."LOC_LONGITUDE" < ${lng - 1}
     AND e."EVENT_DATE" > ${realDate} AND e."EVENT_DATE < ${realDate + 1000 * 3600 * 24 * 2}`;

@@ -70,6 +70,14 @@ class DBConnexion {
       },
       // wtf type
       TAG_TEXT: Sequelize.STRING,
+      TAG_PROFILE: {
+        type: Sequelize.DataTypes.UUID,
+        references: { model: this.tag, key: 'ID_PROFILE', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE },
+      },
+      TAG_EVENT: {
+        type: Sequelize.DataTypes.UUID,
+        references: { model: this.tag, key: 'ID_EVENT', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE },
+      },
     }, {
       freezeTableName: true,
       timestamps: false,
@@ -85,9 +93,9 @@ class DBConnexion {
       PROFILE_DESC: Sequelize.STRING,
       // wtf type
       PROFILE_AVATAR: Sequelize.STRING,
-      PROFILE_TAG: {
+      PROFILE_USER: {
         type: Sequelize.DataTypes.UUID,
-        references: { model: this.tag, key: 'ID_TAG', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE },
+        references: { model: this.tag, key: 'ID_USER', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE },
       },
     }, {
       freezeTableName: true,
@@ -104,6 +112,10 @@ class DBConnexion {
       LOC_DISCTRICT: Sequelize.BIGINT,
       LOC_LONGITUDE: { type: Sequelize.NUMERIC, validate: { max: 180, min: -180 } },
       LOC_LATITUDE: { type: Sequelize.NUMERIC, validate: { max: 90, min: -90 } },
+      LOC_EVENT: {
+        type: Sequelize.DataTypes.UUID,
+        references: { model: this.tag, key: 'ID_EVENT', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE },
+      },
     }, {
       freezeTableName: true,
       timestamps: false,
@@ -118,6 +130,10 @@ class DBConnexion {
       MES_DATE: Sequelize.DATE,
       MES_AUTHOR: Sequelize.STRING,
       MES_CONTENT: Sequelize.STRING,
+      MES_CONV: {
+        type: Sequelize.DataTypes.UUID,
+        references: { model: this.tag, key: 'ID_CONVERSATION', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE },
+      },
     }, {
       freezeTableName: true,
       timestamps: false,
@@ -133,6 +149,10 @@ class DBConnexion {
       MEDIA_TYPE: Sequelize.STRING(20),
       // wtf type
       MEDIA_CONTENT: Sequelize.STRING,
+      MEDIA_EVENT: {
+        type: Sequelize.DataTypes.UUID,
+        references: { model: this.tag, key: 'ID_EVENT', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE },
+      },
     }, {
       freezeTableName: true,
       timestamps: false,
@@ -150,10 +170,6 @@ class DBConnexion {
       // wtf type
       USER_EMAIL: { type: Sequelize.STRING, validate: { isEmail: true } },
       USER_PWD: Sequelize.STRING,
-      USER_PROFILE: {
-        type: Sequelize.DataTypes.UUID,
-        references: { model: this.profile, key: 'ID_PROFILE', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE },
-      },
     }, {
       freezeTableName: true,
       timestamps: false,
@@ -168,9 +184,7 @@ class DBConnexion {
       },
       EVENT_NAME: Sequelize.STRING(255),
       EVENT_DESC: Sequelize.STRING(255),
-      EVENT_MEDIA: { type: Sequelize.DataTypes.UUID, references: { model: this.media, key: 'ID_MEDIA', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE } },
       EVENT_USER: Sequelize.BIGINT,
-      EVENT_LOCATION: { type: Sequelize.DataTypes.UUID, references: { model: this.location, key: 'ID_LOCATION', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE } },
     }, {
       freezeTableName: true,
       timestamps: false,
@@ -182,21 +196,20 @@ class DBConnexion {
         primaryKey: true,
         allowNull: false,
       },
-      CONV_MESSAGE: { type: Sequelize.DataTypes.UUID, references: { model: this.message, key: 'ID_MESSAGE', deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE } },
     }, {
       freezeTableName: true,
       timestamps: false,
     });
 
     // n to n relations, tables de jointures
-    this.eventUser = this.db.define('event_user', {
+    this.eventUser = this.db.define('EVENT_USER', {
       STATUS: Sequelize.BOOLEAN,
     }, {
       freezeTableName: true,
       timestamps: false,
     });
-    this.user.belongsToMany(this.event, { through: 'event_user', foreignKey: 'ID_USER', otherKey: 'ID_EVENT' });
-    this.user.belongsToMany(this.conversation, { through: 'conv_user', foreignKey: 'ID_USER', otherKey: 'ID_CONVERSATION' });
+    this.user.belongsToMany(this.event, { through: 'EVENT_USER', foreignKey: 'ID_USER', otherKey: 'ID_EVENT' });
+    this.user.belongsToMany(this.conversation, { through: 'CONV_USER', foreignKey: 'ID_USER', otherKey: 'ID_CONVERSATION' });
   }
 }
 
