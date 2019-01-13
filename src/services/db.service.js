@@ -96,19 +96,17 @@ const dbService = {
     });
   },
 
-  getMessages(email, callback) {
+  async getMessages(email) {
     const request = `SELECT * FROM "MESSAGE" m 
       JOIN "CONVERSATION" c ON m."MES_CONV" = c."ID_CONVERSATION"
       JOIN "CONV_USER" cu ON cu."ID_CONV" = c."ID_CONVERSATION"
       JOIN "USER" u ON cu."ID_USER" = u."ID_USER" 
       WHERE u."USER_EMAIL" = '${email}'`;
-    dbconnexion.db.query(request).then((result) => {
-      if (result[0].length !== 0) { return callback(null, result[0]); }
-      return callback(null, null);
-    }).catch((err) => {
-      console.error(err);
-      callback('Error append when getMessages', null);
-    });
+    try {
+      return await dbconnexion.db.query(request);
+    } catch (e) {
+      throw e;
+    }
   },
 
   async profileUser(email) {
