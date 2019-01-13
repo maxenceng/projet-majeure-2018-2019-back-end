@@ -1,7 +1,17 @@
 import { Router } from 'express';
 import dbService from '../services/db.service';
+import webtoken from '../middlewares/webtoken';
 
 const router = Router();
+
+// Middleware qui check le webtoken
+router.use((req, res, next) => {
+  const auth = req.headers.authorization;
+  if (auth && webtoken.verifyToken(auth.split(' ')[1])) {
+    return next();
+  }
+  return res.status(401).send('User not authentified');
+});
 
 /**
  * get user profile with
@@ -53,25 +63,6 @@ router.route('/updateProfile').post(async (req, res) => {
     return res.status(500).send({ err: 'Error when updating the profile of the user' });
   }
   return res.status(200).send({ message: 'Profile updated!' });
-});
-
-/**
- * update the picture of the user
- */
-router.route('/updateTags').post((req, res) => {
-  const { email, tags } = req.body;
-
-  // Check parameters
-  if (!email || !tags) { return res.status(400).send('Missing Parameters'); }
-
-  // Check types
-  if (typeof email !== 'string' || !Array.isArray(tags)) { return res.status(400).send('Bad parameters'); }
-
-  const cb = (err, updateProfile) => {
-    if (err) { return res.status(400).send({ error: err }); }
-    return res.status(200).send({ message: updateProfile });
-  };
-  return dbService.updateTags(email, tags, cb);
 });
 
 export default router;

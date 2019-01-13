@@ -62,6 +62,7 @@ router.route('/signUp').post(async (req, res) => {
     try {
       return authController.signUp(firstname, name, password, email, res);
     } catch (e) {
+      console.error(e);
       res.status(500).send({ error: 'Error append during signUp' });
     }
   }

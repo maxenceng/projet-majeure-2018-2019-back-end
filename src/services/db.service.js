@@ -126,40 +126,42 @@ const dbService = {
     return profile;
   },
 
-  updateTags(email, tags, callback) {
+  async updateTags(email, tags) {
     console.log(tags);
     const request = `
-      SELECT p."PROFILE_TAG" FROM "PROFILE" AS p
+      SELECT p."ID_PROFILE" FROM "PROFILE" AS p
       JOIN "USER" AS u ON u."ID_USER" = p."PROFILE_USER"
-      AND u."USER_EMAIL" = '${email}'`;
+      WHERE u."USER_EMAIL" = '${email}'`;
     // On cherche l'id du profil corrspondant à l'email
-    dbconnexion.db.query(request).then((result) => {
-      if (result[0].length !== 0) {
-        const profileTag = result[0][0].PROFILE_TAG;
-        // On delete tous les anciens tags
-        dbconnexion.db.query(`DELETE FROM "TAG" WHERE "ID_TAG" = '${profileTag}'`)
-          .then(() => {
-            // On recréé tous les nouveaux tags
-            tags.forEach((tag) => {
-              dbconnexion.tag.create({
-                ID_TAG: profileTag,
-                TAG_TEXT: tag,
-              }).catch((err) => {
-                console.error(err);
-                return callback(err);
-              });
-            });
-          }).catch((err) => {
-            console.error(err);
-            return callback(err);
-          });
-        return callback(null);
+    let result;
+    try {
+      result = await dbconnexion.db.query(request);
+    } catch (e) {
+      throw e;
+    }
+    if (result && result[0].length !== 0) {
+      const profileId = result[0][0].ID_PROFILE;
+      // On delete tous les anciens tags
+      try {
+        await dbconnexion.db.query(`DELETE FROM "TAG" WHERE "TAG_PROFILE" = '${profileId}'`);
+      } catch (e) {
+        throw e;
       }
-      return callback('No tags update');
-    }).catch((err) => {
-      console.error(err);
-      callback('Error when update tags', null);
-    });
+
+      // On recréé tous les nouveaux tags
+      tags.forEach(async (tag) => {
+        try {
+          await dbconnexion.tag.create({
+            TAG_TEXT: tag,
+            TAG_PROFILE: profileId,
+          });
+        } catch (e) {
+          throw e;
+        }
+      });
+    } else {
+      throw new Error('Profile not found');
+    }
   },
 
   async updateProfile(email, linkPicture, description, tags) {
@@ -176,9 +178,45 @@ const dbService = {
     } catch (e) {
       throw e;
     }
+
+    const requestTags = `
+      SELECT p."ID_PROFILE" FROM "PROFILE" AS p
+      JOIN "USER" AS u ON u."ID_USER" = p."PROFILE_USER"
+      WHERE u."USER_EMAIL" = '${email}'`;
+    // On cherche l'id du profil corrspondant à l'email
+    let result;
+    try {
+      result = await dbconnexion.db.query(requestTags);
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+    if (result && result[0].length !== 0) {
+      const profileId = result[0][0].ID_PROFILE;
+      // On delete tous les anciens tags
+      try {
+        await dbconnexion.db.query(`DELETE FROM "TAG" WHERE "TAG_PROFILE" = '${profileId}'`);
+      } catch (e) {
+        throw e;
+      }
+
+      // On recréé tous les nouveaux tags
+      tags.forEach(async (tag) => {
+        try {
+          await dbconnexion.tag.create({
+            TAG_TEXT: tag,
+            TAG_PROFILE: profileId,
+          });
+        } catch (e) {
+          throw e;
+        }
+      });
+    } else {
+      throw new Error('Profile not found');
+    }
   },
 
-  async allEvents(date, location, preferences) {
+  async allEvents(date, location, tags) {
     const { lng, lat } = location;
 
     let realDate;
@@ -187,36 +225,32 @@ const dbService = {
     }
 
     let request = `SELECT * FROM "EVENT" e
-    JOIN "LOCATION" l WHERE e."ID_EVENT" = l."LOC_EVENT"
-    AND l."LOC_LATTITUDE" > ${lat + 1} AND l."LOC_LATTITUDE" < ${lat - 1}
-    AND l."LOC_LONGITUDE" > ${lng + 1} AND l."LOC_LONGITUDE" < ${lng - 1}
-    AND e."EVENT_DATE" > ${realDate} AND e."EVENT_DATE < ${realDate + 1000 * 3600 * 24 * 2}`;
+    JOIN "LOCATION" l ON e."ID_EVENT" = l."LOC_EVENT"
+    AND l."LOC_LATITUDE" < ${lat + 1} AND l."LOC_LATITUDE" > ${lat - 1}
+    AND l."LOC_LONGITUDE" < ${lng + 1} AND l."LOC_LONGITUDE" > ${lng - 1}
+    AND e."EVENT_DATE" > ${realDate} AND e."EVENT_DATE" < ${realDate + 1000 * 3600 * 24 * 10}`;
 
-    const requestPreferences = async preference => `e."EVENT_TAG" = ${preference}`;
+    const requestPreferences = async preference => `e."EVENT_TAG" = ${preference} OR`;
 
     // TODO faire plus plusieurs préférences
-    if (preferences) {
+    if (tags) {
       request += 'AND';
-      preferences.forEach((pref) => {
-        request += `${requestPreferences(pref)}`;
+      tags.forEach(async (pref) => {
+        request += await requestPreferences(pref);
       });
+      request = request.substring(0, request.length - 3);
     }
 
     try {
-      const result = await dbconnexion.db.query(request);
-      if (result[0]) {
-        return { err: null, message: 'Get events ok!', events: result[0][0] };
-      }
-      return { err: null, message: 'Get events ok!', events: null };
+      return await dbconnexion.db.query(request);
     } catch (e) {
-      return ({ err: 'Error when getting events', message: '', events: '' });
+      throw e;
     }
   },
 
-  async addEvent(date, location, preferences, media, eventName, eventDesc) {
+  async addEvent(date, location, tags, media, eventName, eventDesc) {
     const { lng, lat } = location;
-    const uuidLocation = uuidv4();
-    const uuidMedia = uuidv4();
+    const uuidEvent = uuidv4();
 
     let realDate;
     if (!date || date < Date.now()) { realDate = Date.now(); } else {
@@ -224,10 +258,11 @@ const dbService = {
     }
 
     try {
-      await dbconnexion.media.create({
-        ID_MEDIA: uuidMedia,
-        MEDIA_TYPE: media.type,
-        MEDIA_CONTENT: media.content,
+      await dbconnexion.event.create({
+        ID_EVENT: uuidEvent,
+        EVENT_NAME: eventName,
+        EVENT_DESC: eventDesc,
+        EVENT_DATE: realDate,
       });
     } catch (e) {
       throw e;
@@ -235,7 +270,7 @@ const dbService = {
 
     try {
       await dbconnexion.location.create({
-        ID_LOCATION: uuidLocation,
+        LOC_EVENT: uuidEvent,
         LOC_DISCTRICT: 0,
         LOC_LONGITUDE: lng,
         LOC_LATITUDE: lat,
@@ -245,19 +280,27 @@ const dbService = {
     }
 
     try {
-      await dbconnexion.event.create({
-        ID_EVENT: uuidv4,
-        EVENT_NAME: eventName,
-        EVENT_DESC: eventDesc,
-        EVENT_USER: null,
-        EVENT_LOCATION: uuidLocation,
-        EVENT_MEDIA: uuidMedia,
+      await dbconnexion.media.create({
+        MEDIA_EVENT: uuidEvent,
+        MEDIA_TYPE: media.type,
+        MEDIA_CONTENT: media.content,
       });
     } catch (e) {
       throw e;
     }
 
-    return ({ message: 'create event success' });
+    tags.forEach(async (tag) => {
+      try {
+        await dbconnexion.tag.create({
+          TAG_EVENT: uuidEvent,
+          TAG_TEXT: tag,
+        });
+      } catch (e) {
+        throw e;
+      }
+    });
+
+    return true;
   },
 };
 

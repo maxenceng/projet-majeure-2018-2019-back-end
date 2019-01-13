@@ -184,7 +184,7 @@ class DBConnexion {
       },
       EVENT_NAME: Sequelize.STRING(255),
       EVENT_DESC: Sequelize.STRING(255),
-      EVENT_USER: Sequelize.BIGINT,
+      EVENT_DATE: Sequelize.BIGINT,
     }, {
       freezeTableName: true,
       timestamps: false,

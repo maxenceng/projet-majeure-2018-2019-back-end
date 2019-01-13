@@ -7,17 +7,16 @@ const router = Router();
 /**
  * Route pour obetnir des évenements
  *  - location OBLIGATOIRE
- *  - preferences NON OBLIGATOIRE
+ *  - tags NON OBLIGATOIRE
  *  - date NON OBLIGATOIRE
- *  - price NON OBLIGATOIRE
  */
 router.route('/allEvents').get(async (req, res) => {
   const {
-    date, location, preferences, price,
+    date, location, tags, price,
   } = req.query;
+  let tabTags;
   let locationObj;
 
-  console.log(location);
   try {
     locationObj = JSON.parse(location);
   } catch (e) {
@@ -26,7 +25,9 @@ router.route('/allEvents').get(async (req, res) => {
   }
 
   // Check parameter location
-  if (!locationObj || typeof locationObj !== typeof JSON.parse('{"test": "test"}')) { return res.status(400).send({ err: 'Location is missing' }); }
+  if (!locationObj || typeof locationObj !== typeof JSON.parse('{"test": "test"}')) {
+    return res.status(400).send({ err: 'Location is missing' });
+  }
 
   // Check location type
   if (!locationObj.lng || !locationObj.lat
@@ -36,14 +37,26 @@ router.route('/allEvents').get(async (req, res) => {
   // Check date type
   if (date && typeof date !== typeof 2) { return res.status(400).send({ err: 'Wrong date type' }); }
 
-  // Check preferences
-  if (preferences && !Array.isArray(preferences)) {
-    return res.status(400).send({ err: 'Wrong preferences type' });
+  // Check tags
+  if (tags && typeof tags !== typeof 'string') {
+    return res.status(400).send({ err: 'Wrong tags type' });
   }
+
+  // On transforme la chaine de caractère tags en string
+  if (tags) {
+    tabTags = tags.split(',');
+    tabTags = tabTags.map(tag => tag.trim());
+  }
+
   try {
-    return await res.send(dbService.allEvents(date, locationObj, preferences, price));
+    const result = await dbService.allEvents(date, locationObj, tabTags, price);
+    if (result[0]) {
+      return res.status(200).send({ message: 'Get events ok!', events: result[0] });
+    }
+    return res.status(200).send({ message: 'Get events ok!', events: null });
   } catch (e) {
-    return res.status(400).send({ err: 'Error append when getting events' });
+    console.error(e);
+    return res.status(500).send({ err: 'Error append when getting events' });
   }
 });
 
@@ -130,10 +143,10 @@ router.route('/addEvent').post(async (req, res) => {
       return res.status(200).send({ message: 'Event well added!' });
     } catch (e) {
       console.error(e);
-      return res.status(400).send({ err: 'Error append when adding event' });
+      return res.status(500).send({ err: 'Error append when adding event' });
     }
   } else {
-    return res.status(400).send('Not authorized!!');
+    return res.status(400).send({ err: 'Not authorized!!' });
   }
 });
 
