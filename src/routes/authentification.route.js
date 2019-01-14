@@ -11,26 +11,26 @@ router.route('/signIn').post(async (req, res) => {
   const { email, password } = req.body;
 
   // Check missing parameters
-  if (!email || !password) { return res.status(404).send({ message: 'Missing parameters' }); }
+  if (!email || !password) { return res.status(404).send({ err: 'Missing parameters' }); }
 
   // Check types email and password
   if (typeof email === 'string' && typeof password === 'string') {
     // Check valid email
     if (!/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-      .test(email)) { return res.status(404).send({ message: 'Enter a valid email' }); }
+      .test(email)) { return res.status(404).send({ err: 'Enter a valid email' }); }
 
     // Check password length
-    if (password.length > 50) { return res.status(404).send({ message: 'Password too long!' }); }
+    if (password.length > 50) { return res.status(404).send({ err: 'Password too long!' }); }
 
     // SignIn
     try {
       return await authController.signIn(email, password, res);
     } catch (e) {
       console.error(e);
-      return res.status(500).send({ error: 'Error append during SignIn' });
+      return res.status(500).send({ err: 'Error append during SignIn' });
     }
   }
-  return res.status(400).send({ error: 'bad parameters' });
+  return res.status(400).send({ err: 'bad parameters' });
 });
 
 /**
@@ -43,30 +43,30 @@ router.route('/signUp').post(async (req, res) => {
   } = req.body;
 
   // Missing parameters check
-  if (!firstname || !name || !password || !email || !passwordVerif) { return res.status(400).send({ message: 'missing parameters' }); }
+  if (!firstname || !name || !password || !email || !passwordVerif) { return res.status(400).send({ err: 'missing parameters' }); }
 
   // On vérifie le type des arguments
   if (typeof firstname === 'string' && typeof name === 'string' && typeof password === 'string'
     && typeof email === 'string' && typeof passwordVerif === 'string') {
     // Check email
     if (!/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-      .test(email)) { return res.status(400).send({ message: 'Enter a valid email' }); }
+      .test(email)) { return res.status(400).send({ err: 'Enter a valid email' }); }
 
     // Check longueur noms
-    if (firstname.length > 60 || name.length > 60 || password.length > 40) { return res.status(400).send({ message: 'Too long firstname or name or password!' }); }
+    if (firstname.length > 60 || name.length > 60 || password.length > 40) { return res.status(400).send({ err: 'Too long firstname or name or password!' }); }
 
     // Check passwords
-    if (passwordVerif !== password) { return res.status(400).send({ message: 'Passwords don\'t match' }); }
+    if (passwordVerif !== password) { return res.status(400).send({ err: 'Passwords don\'t match' }); }
 
     // SignUp
     try {
-      return authController.signUp(firstname, name, password, email, res);
+      return await authController.signUp(firstname, name, password, email, res);
     } catch (e) {
       console.error(e);
-      res.status(500).send({ error: 'Error append during signUp' });
+      res.status(500).send({ err: 'Error append during signUp' });
     }
   }
-  return res.status(400).send({ error: 'bad parameters' });
+  return res.status(400).send({ err: 'bad parameters' });
 });
 
 // Route test, à supprimmer

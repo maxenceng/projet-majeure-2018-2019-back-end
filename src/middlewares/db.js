@@ -154,6 +154,7 @@ class DBConnexion {
       // wtf type
       USER_EMAIL: { type: Sequelize.STRING, validate: { isEmail: true } },
       USER_PWD: Sequelize.STRING,
+      USER_ROLE: Sequelize.BOOLEAN,
     }, {
       freezeTableName: true,
       timestamps: false,
