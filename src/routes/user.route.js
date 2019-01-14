@@ -5,13 +5,13 @@ import webtoken from '../middlewares/webtoken';
 const router = Router();
 
 // Middleware qui check le webtoken
-router.use((req, res, next) => {
+/* router.use((req, res, next) => {
   const auth = req.headers.authorization;
   if (auth && webtoken.verifyToken(auth.split(' ')[1])) {
     return next();
   }
   return res.status(401).send('User not authentified');
-});
+}); */
 
 /**
  * get user profile with
@@ -43,20 +43,22 @@ router.route('/userProfile').get(async (req, res) => {
  */
 router.route('/updateProfile').post(async (req, res) => {
   const {
-    idUser, tags, description, linkPicture,
+    idUser, tags, description, linkPicture, firstname, lastname,
   } = req.body;
 
   // Check parameters
-  if (!idUser || !tags || !description || !linkPicture) { return res.status(400).send('Missing Parameters'); }
+  if (!idUser || !tags || !description || !linkPicture
+      || !firstname || !lastname) { return res.status(400).send('Missing Parameters'); }
 
   // Check types
   if (typeof idUser !== 'string' || !Array.isArray(tags)
-    || typeof description !== 'string' || typeof linkPicture !== 'string') {
+    || typeof description !== 'string' || typeof linkPicture !== 'string'
+    || typeof firstname !== 'string' || typeof lastname !== 'string') {
     return res.status(400).send('Bad parameters');
   }
 
   try {
-    await dbService.updateProfile(idUser, linkPicture, description, tags);
+    await dbService.updateProfile(idUser, linkPicture, description, tags, firstname, lastname);
   } catch (e) {
     console.error(e);
     return res.status(500).send({ err: 'Error when updating the profile of the user' });

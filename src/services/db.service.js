@@ -115,7 +115,7 @@ const dbService = {
   },
 
   async profileUser(idUser) {
-    const request = `SELECT p."PROFILE_DESC", p."PROFILE_AVATAR", t."TAG_TEXT"
+    const request = `SELECT p."PROFILE_DESC", p."PROFILE_AVATAR", t."TAG_TEXT", u."USER_FIRSTNAME", u."USER_NAME"
       FROM "TAG" t
       JOIN "PROFILE" p ON t."TAG_PROFILE" = p."ID_PROFILE"
       JOIN "USER" u ON p."PROFILE_USER" = u."ID_USER"
@@ -129,7 +129,7 @@ const dbService = {
     return profile;
   },
 
-  async updateProfile(idUser, linkPicture, description, tags) {
+  async updateProfile(idUser, linkPicture, description, tags, firstname, lastname) {
     const request = `
     UPDATE "PROFILE" AS p
     SET "PROFILE_DESC" = '${description}', 
@@ -138,8 +138,23 @@ const dbService = {
     WHERE p."PROFILE_USER" = u."ID_USER"
     AND u."ID_USER" = '${idUser}'`;
     // On update la description de l'utilisateur
+
+    const updateUser = `
+    UPDATE "USER" AS u
+    SET "USER_FIRSTNAME" = '${firstname}', 
+    "USER_NAME" = '${lastname}'
+    WHERE u."ID_USER" = '${idUser}'`;
+
+    // Update profile
     try {
       await dbconnexion.db.query(request);
+    } catch (e) {
+      throw e;
+    }
+
+    // Update username and lastname
+    try {
+      await dbconnexion.db.query(updateUser);
     } catch (e) {
       throw e;
     }
@@ -158,7 +173,7 @@ const dbService = {
     }
 
     // Si on ne trouve pas le profile en base de donnée on renvoir une erreur
-    if (!result || result[0].length !== 0) { throw new Error('Profile not found'); }
+    if (!result || result[0].length === 0) { throw new Error('Profile not found'); }
 
     const profileId = result[0][0].ID_PROFILE;
     // On delete tous les anciens tags
@@ -267,6 +282,14 @@ const dbService = {
 
     return true;
   },
+
+  /* async participateEvent(idUser, idEvent) {
+    try {
+      await dbconnexion
+    } ctach (e) {
+
+    }
+  } */
 };
 
 export default dbService;
