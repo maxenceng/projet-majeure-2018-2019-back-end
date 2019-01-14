@@ -332,6 +332,20 @@ const dbService = {
       throw e;
     }
   },
+
+  async userEvents(idUser) {
+    const request = `SELECT * FROM "EVENT" e 
+    JOIN "EVENT_USER" eu ON eu."ID_EVENT" = e."ID_EVENT"
+    WHERE eu."ID_USER" ='${idUser}'`;
+
+    try {
+      const results = await dbconnexion.db.query(request);
+      if (!results || results[0].length === 0) { return null; }
+      return results[0];
+    } catch (e) {
+      throw e;
+    }
+  },
 };
 
 export default dbService;

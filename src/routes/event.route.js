@@ -178,4 +178,18 @@ router.route('/addEvent').post(async (req, res) => {
   }
 });
 
+router.route('/userEvents').get(async (req, res) => {
+  const { idUser } = req.query;
+
+  if (!idUser || typeof idUser !== 'string') { return res.status(400).send({ err: 'idUser is not defined' }); }
+
+  try {
+    const events = await dbService.userEvents(idUser);
+    return res.status(200).send({ events });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send({ err: 'Error append when getting events for the user' });
+  }
+});
+
 export default router;
