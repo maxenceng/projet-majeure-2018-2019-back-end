@@ -17,16 +17,14 @@ const authController = {
       const WT = webtoken.signToken(payload);
       return res.status(200).send({ message: 'signIn sucess', token: WT, user });
     }
-    return res.status(404).send({ error: 'User was not found!' });
+    return res.status(404).send({ err: 'User was not found!' });
   },
 
   async signUp(firstname, name, password, email, res) {
     let creation;
     try {
       creation = await dbService.createUser(firstname, name, email, password);
-    } catch (e) {
-      throw e;
-    }
+    } catch (e) { throw e; }
     const payload = {
       admin: false,
     };

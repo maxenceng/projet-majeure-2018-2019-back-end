@@ -73,50 +73,53 @@ const dbService = {
     }
   },
 
-  createMessage(message, author, destEmail, callback) {
+  async createMessage(message, author, idDest) {
     const request = `SELECT c."ID_CONVERSATION" FROM "CONVERSATION" c 
       JOIN "CONV_USER" cu ON cu."ID_CONV" = c."ID_CONVERSATION"
       JOIN "USER" u ON cu."ID_USER" = u."ID_USER"
-      WHERE u."USER_EMAIL" = '${destEmail}'`;
-    dbconnexion.db.query(request).then((result) => {
-      if (result[0].length !== 0) {
-        dbconnexion.message.create({
-          ID_CONVERSATION: result[0],
-          MES_AUTHOR: author,
-          // miliseconds depuis le 1 er janvier 1970
-          MES_DATA: Date.now(),
-          MES_MESSAGE: message,
-        });
-        return callback(null);
-      }
-      return callback('No dest found in db');
-    }).catch((err) => {
-      console.error(err);
-      return callback('No dest found in db', null);
-    });
+      WHERE u."ID_USER" = '${idDest}'`;
+    let result;
+    try {
+      result = await dbconnexion.db.query(request);
+    } catch (e) {
+      throw e;
+    }
+
+    // Si pas de destinataire trouvé sur la db on renvoie une erreur
+    if (!result || result[0].length === 0) { throw new Error('Dest not found'); }
+
+    try {
+      await dbconnexion.message.create({
+        ID_CONVERSATION: result[0].ID_CONVERSATION,
+        MES_AUTHOR: author,
+        // miliseconds depuis le 1 er janvier 1970
+        MES_DATA: Date.now(),
+        MES_MESSAGE: message,
+      });
+    } catch (e) {
+      throw e;
+    }
   },
 
-  getMessages(email, callback) {
+  async getMessages(idUser) {
     const request = `SELECT * FROM "MESSAGE" m 
       JOIN "CONVERSATION" c ON m."MES_CONV" = c."ID_CONVERSATION"
       JOIN "CONV_USER" cu ON cu."ID_CONV" = c."ID_CONVERSATION"
       JOIN "USER" u ON cu."ID_USER" = u."ID_USER" 
-      WHERE u."USER_EMAIL" = '${email}'`;
-    dbconnexion.db.query(request).then((result) => {
-      if (result[0].length !== 0) { return callback(null, result[0]); }
-      return callback(null, null);
-    }).catch((err) => {
-      console.error(err);
-      callback('Error append when getMessages', null);
-    });
+      WHERE u."ID_USER" = '${idUser}'`;
+    try {
+      return await dbconnexion.db.query(request);
+    } catch (e) {
+      throw e;
+    }
   },
 
-  async profileUser(email) {
-    const request = `SELECT p."PROFILE_DESC", p."PROFILE_AVATAR", t."TAG_TEXT"
+  async profileUser(idUser) {
+    const request = `SELECT p."PROFILE_DESC", p."PROFILE_AVATAR", t."TAG_TEXT", u."USER_FIRSTNAME", u."USER_NAME"
       FROM "TAG" t
       JOIN "PROFILE" p ON t."TAG_PROFILE" = p."ID_PROFILE"
       JOIN "USER" u ON p."PROFILE_USER" = u."ID_USER"
-      WHERE u."USER_EMAIL" = '${email}'`;
+      WHERE u."ID_USER" = '${idUser}'`;
     let profile;
     try {
       profile = await dbconnexion.db.query(request);
@@ -126,55 +129,32 @@ const dbService = {
     return profile;
   },
 
-  async updateTags(email, tags) {
-    console.log(tags);
-    const request = `
-      SELECT p."ID_PROFILE" FROM "PROFILE" AS p
-      JOIN "USER" AS u ON u."ID_USER" = p."PROFILE_USER"
-      WHERE u."USER_EMAIL" = '${email}'`;
-    // On cherche l'id du profil corrspondant à l'email
-    let result;
-    try {
-      result = await dbconnexion.db.query(request);
-    } catch (e) {
-      throw e;
-    }
-    if (result && result[0].length !== 0) {
-      const profileId = result[0][0].ID_PROFILE;
-      // On delete tous les anciens tags
-      try {
-        await dbconnexion.db.query(`DELETE FROM "TAG" WHERE "TAG_PROFILE" = '${profileId}'`);
-      } catch (e) {
-        throw e;
-      }
-
-      // On recréé tous les nouveaux tags
-      tags.forEach(async (tag) => {
-        try {
-          await dbconnexion.tag.create({
-            TAG_TEXT: tag,
-            TAG_PROFILE: profileId,
-          });
-        } catch (e) {
-          throw e;
-        }
-      });
-    } else {
-      throw new Error('Profile not found');
-    }
-  },
-
-  async updateProfile(email, linkPicture, description, tags) {
+  async updateProfile(idUser, linkPicture, description, tags, firstname, lastname) {
     const request = `
     UPDATE "PROFILE" AS p
     SET "PROFILE_DESC" = '${description}', 
     "PROFILE_AVATAR" = '${linkPicture}'
     FROM "USER" AS u
     WHERE p."PROFILE_USER" = u."ID_USER"
-    AND u."USER_EMAIL" = '${email}'`;
+    AND u."ID_USER" = '${idUser}'`;
     // On update la description de l'utilisateur
+
+    const updateUser = `
+    UPDATE "USER" AS u
+    SET "USER_FIRSTNAME" = '${firstname}', 
+    "USER_NAME" = '${lastname}'
+    WHERE u."ID_USER" = '${idUser}'`;
+
+    // Update profile
     try {
       await dbconnexion.db.query(request);
+    } catch (e) {
+      throw e;
+    }
+
+    // Update username and lastname
+    try {
+      await dbconnexion.db.query(updateUser);
     } catch (e) {
       throw e;
     }
@@ -182,7 +162,7 @@ const dbService = {
     const requestTags = `
       SELECT p."ID_PROFILE" FROM "PROFILE" AS p
       JOIN "USER" AS u ON u."ID_USER" = p."PROFILE_USER"
-      WHERE u."USER_EMAIL" = '${email}'`;
+      WHERE u."ID_USER" = '${idUser}'`;
     // On cherche l'id du profil corrspondant à l'email
     let result;
     try {
@@ -191,29 +171,29 @@ const dbService = {
       console.error(e);
       throw e;
     }
-    if (result && result[0].length !== 0) {
-      const profileId = result[0][0].ID_PROFILE;
-      // On delete tous les anciens tags
+
+    // Si on ne trouve pas le profile en base de donnée on renvoir une erreur
+    if (!result || result[0].length === 0) { throw new Error('Profile not found'); }
+
+    const profileId = result[0][0].ID_PROFILE;
+    // On delete tous les anciens tags
+    try {
+      await dbconnexion.db.query(`DELETE FROM "TAG" WHERE "TAG_PROFILE" = '${profileId}'`);
+    } catch (e) {
+      throw e;
+    }
+
+    // On recréé tous les nouveaux tags
+    tags.forEach(async (tag) => {
       try {
-        await dbconnexion.db.query(`DELETE FROM "TAG" WHERE "TAG_PROFILE" = '${profileId}'`);
+        await dbconnexion.tag.create({
+          TAG_TEXT: tag,
+          TAG_PROFILE: profileId,
+        });
       } catch (e) {
         throw e;
       }
-
-      // On recréé tous les nouveaux tags
-      tags.forEach(async (tag) => {
-        try {
-          await dbconnexion.tag.create({
-            TAG_TEXT: tag,
-            TAG_PROFILE: profileId,
-          });
-        } catch (e) {
-          throw e;
-        }
-      });
-    } else {
-      throw new Error('Profile not found');
-    }
+    });
   },
 
   async allEvents(date, location, tags) {
@@ -302,6 +282,14 @@ const dbService = {
 
     return true;
   },
+
+  /* async participateEvent(idUser, idEvent) {
+    try {
+      await dbconnexion
+    } ctach (e) {
+
+    }
+  } */
 };
 
 export default dbService;

@@ -38,25 +38,9 @@ class DBConnexion {
         // Synchronisation du modèle
       })
       .catch((err) => {
-        console.log('error connexion with database');
-        console.log(err);
+        console.error('error connexion with database');
+        console.error(err);
       });
-  }
-
-  /**
-   * A supprimmer !!! Juste pour reset la database rapidement
-   */
-  dropTables() {
-    this.db.query('drop table events')
-      .then(() => { this.db.query('drop table users'); })
-      .then(() => { this.db.query('drop table conversations'); })
-      .then(() => { this.db.query('drop table media'); })
-      .then(() => { this.db.query('drop table locations'); })
-      .then(() => { this.db.query('drop table profiles'); })
-      .then(() => { this.db.query('drop table messages'); })
-      .then(() => { this.db.query('drop table tags'); })
-      .then(() => { this.db.query('drop table conv_user'); })
-      .then(() => { this.db.query('drop table event_users'); });
   }
 
   // On map la base de données distante
