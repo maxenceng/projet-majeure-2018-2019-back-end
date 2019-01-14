@@ -285,6 +285,19 @@ const dbService = {
   },
 
   async participateEvent(idUser, idEvent) {
+    let existence;
+    const requestExistance = `SELECT * FROM "EVENT_USER" 
+    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}'`;
+
+    try {
+      existence = await dbconnexion.db.query(requestExistance);
+    } catch (e) {
+      throw e;
+    }
+
+    // On check si il participe déja
+    if (!existence || existence[0].length !== 0) { throw new Error('User is already participating to the event'); }
+
     try {
       await dbconnexion.eventUser.create({
         ID_USER: idUser,
@@ -298,19 +311,27 @@ const dbService = {
   },
 
   async cancelParticipation(idUser, idEvent) {
-    const request = `DELETE FROM "EVENT_USER" eu
+    let existence;
+    const requestExistance = `SELECT * FROM "EVENT_USER" 
     WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}'`;
+
     try {
-      await dbconnexion.eventUser.create({
-        ID_USER: idUser,
-        ID_EVENT: idEvent,
-        STATUS: false,
-      });
+      existence = await dbconnexion.db.query(requestExistance);
     } catch (e) {
       throw e;
     }
-    return true;
-  }
+
+    // On check si il n'a jamais participé
+    if (!existence || existence[0].length === 0) { throw new Error('User did not participate at this event in the first place'); }
+
+    const request = `DELETE FROM "EVENT_USER" eu
+    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}'`;
+    try {
+      return await dbconnexion.db.query(request);
+    } catch (e) {
+      throw e;
+    }
+  },
 };
 
 export default dbService;
