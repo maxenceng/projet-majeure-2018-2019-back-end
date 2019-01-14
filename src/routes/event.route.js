@@ -78,8 +78,22 @@ router.route('/removeParticipation').post((req, res) => {
 /**
  * route called when a user says he wants to participate to an event
  */
-router.route('/participateEvent').post((req, res) => {
+router.route('/participateEvent').post(async (req, res) => {
+  const { idUser, idEvent } = req.query;
 
+  // Check idUser
+  if (!idUser || typeof idUser !== 'string') { return res.status(400).send({ err: 'idUser is not defined' }); }
+
+  // Check idEvent
+  if (!idEvent || typeof idEvent !== 'string') { return res.status(400).send({ err: 'idEvent is not defined' }); }
+
+  try {
+    await dbService.participateEvent(idUser, idEvent);
+    return res.status(200).send({ message: 'Participation accepted' });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send({ err: 'Problem when participating event' });
+  }
 });
 
 /**
