@@ -296,6 +296,21 @@ const dbService = {
     }
     return true;
   },
+
+  async cancelParticipation(idUser, idEvent) {
+    const request = `DELETE FROM "EVENT_USER" eu
+    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}'`;
+    try {
+      await dbconnexion.eventUser.create({
+        ID_USER: idUser,
+        ID_EVENT: idEvent,
+        STATUS: false,
+      });
+    } catch (e) {
+      throw e;
+    }
+    return true;
+  }
 };
 
 export default dbService;

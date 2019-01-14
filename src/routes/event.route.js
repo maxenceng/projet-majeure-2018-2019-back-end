@@ -70,8 +70,22 @@ router.route('/randomEvent').get((req, res) => {
 /**
  * route called when the user remove his particiapation for the event
  */
-router.route('/removeParticipation').post((req, res) => {
+router.route('/removeParticipation').get(async (req, res) => {
+  const { idUser, idEvent } = req.query;
 
+  // Check idUser
+  if (!idUser || typeof idUser !== 'string') { return res.status(400).send({ err: 'idUser is not defined' }); }
+
+  // Check idEvent
+  if (!idEvent || typeof idEvent !== 'string') { return res.status(400).send({ err: 'idEvent is not defined' }); }
+
+  try {
+    await dbService.cancelParticipation(idUser, idEvent);
+    return res.status(200).send({ message: 'Participation cancelled' });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send({ err: 'Problem when removing participation to an event' });
+  }
 });
 
 /**
