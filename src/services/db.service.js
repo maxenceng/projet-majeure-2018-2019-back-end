@@ -25,12 +25,11 @@ const dbService = {
     return result;
   },
 
-  async createUser(firstname, name, email, pwd) {
+  async createUser(uuidUser, firstname, name, email, pwd) {
     // password hashé sale!
     const hash = crypto.createHash('sha256');
     hash.update(pwd + email);
     const hashpwd = hash.digest('hex');
-    const uuidUser = uuidv4();
     const uuidProfile = uuidv4();
     // Generate unique interger
     // On check si l'utilisateur existe ou non

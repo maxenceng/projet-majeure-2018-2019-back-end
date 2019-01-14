@@ -7,10 +7,20 @@ const router = Router();
 // Middleware qui check le webtoken
 /* router.use((req, res, next) => {
   const auth = req.headers.authorization;
-  if (auth && webtoken.verifyToken(auth.split(' ')[1])) {
-    return next();
+  if (!auth || !webtoken.verifyToken(auth.split(' ')[1])) {
+    return res.status(401).send({ err: 'User not authentified' });
   }
-  return res.status(401).send('User not authentified');
+  const { idUser } = req.query;
+  const decodeToken = webtoken.decode(auth.split(' ')[1]);
+
+  if (!decodeToken) { return res.status(500).send({ err: 'Impossible to decode token' }); }
+
+  console.log(idUser, decodeToken.payload);
+  if (decodeToken.payload.idUser !== idUser) {
+    return res.status(401).send({ err: 'IdUser and webtoken don\'t match' });
+  }
+
+  return next();
 }); */
 
 /**

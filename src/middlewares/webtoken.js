@@ -10,7 +10,7 @@ module.exports = {
     const signOptions = {
       issuer: 'WeMe Server',
       subject: 'weme.com',
-      expiresIn: '12h',
+      expiresIn: '168h',
       algorithm: 'HS256',
     };
 
@@ -20,7 +20,7 @@ module.exports = {
     const verifyOptions = {
       issuer: 'WeMe Server',
       subject: 'weme.com',
-      expiresIn: '12h',
+      expiresIn: '168h',
       algorithm: 'HS256',
     };
     try {
