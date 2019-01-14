@@ -49,6 +49,7 @@ const dbService = {
           USER_NAME: name,
           USER_EMAIL: email,
           USER_PWD: hashpwd,
+          USER_ROLE: false,
         });
 
         await dbconnexion.profile.create({
@@ -283,13 +284,18 @@ const dbService = {
     return true;
   },
 
-  /* async participateEvent(idUser, idEvent) {
+  async participateEvent(idUser, idEvent) {
     try {
-      await dbconnexion
-    } ctach (e) {
-
+      await dbconnexion.eventUser.create({
+        ID_USER: idUser,
+        ID_EVENT: idEvent,
+        STATUS: false,
+      });
+    } catch (e) {
+      throw e;
     }
-  } */
+    return true;
+  },
 };
 
 export default dbService;

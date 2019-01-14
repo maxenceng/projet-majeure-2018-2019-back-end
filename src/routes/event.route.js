@@ -77,7 +77,7 @@ router.route('/removeParticipation').post((req, res) => {
 /**
  * route called when a user says he wants to participate to an event
  */
-router.route('/participateEvent').post(async (req, res) => {
+router.route('/participateEvent').get(async (req, res) => {
   const { idUser, idEvent } = req.query;
 
   // Check idUser
