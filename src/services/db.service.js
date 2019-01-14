@@ -25,12 +25,11 @@ const dbService = {
     return result;
   },
 
-  async createUser(firstname, name, email, pwd) {
+  async createUser(uuidUser, firstname, name, email, pwd) {
     // password hashé sale!
     const hash = crypto.createHash('sha256');
     hash.update(pwd + email);
     const hashpwd = hash.digest('hex');
-    const uuidUser = uuidv4();
     const uuidProfile = uuidv4();
     // Generate unique interger
     // On check si l'utilisateur existe ou non
@@ -49,6 +48,7 @@ const dbService = {
           USER_NAME: name,
           USER_EMAIL: email,
           USER_PWD: hashpwd,
+          USER_ROLE: false,
         });
 
         await dbconnexion.profile.create({
@@ -283,13 +283,68 @@ const dbService = {
     return true;
   },
 
-  /* async participateEvent(idUser, idEvent) {
-    try {
-      await dbconnexion
-    } ctach (e) {
+  async participateEvent(idUser, idEvent) {
+    let existence;
+    const requestExistance = `SELECT * FROM "EVENT_USER" 
+    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}'`;
 
+    try {
+      existence = await dbconnexion.db.query(requestExistance);
+    } catch (e) {
+      throw e;
     }
-  } */
+
+    // On check si il participe déja
+    if (!existence || existence[0].length !== 0) { throw new Error('User is already participating to the event'); }
+
+    try {
+      await dbconnexion.eventUser.create({
+        ID_USER: idUser,
+        ID_EVENT: idEvent,
+        STATUS: false,
+      });
+    } catch (e) {
+      throw e;
+    }
+    return true;
+  },
+
+  async cancelParticipation(idUser, idEvent) {
+    let existence;
+    const requestExistance = `SELECT * FROM "EVENT_USER" 
+    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}'`;
+
+    try {
+      existence = await dbconnexion.db.query(requestExistance);
+    } catch (e) {
+      throw e;
+    }
+
+    // On check si il n'a jamais participé
+    if (!existence || existence[0].length === 0) { throw new Error('User did not participate at this event in the first place'); }
+
+    const request = `DELETE FROM "EVENT_USER" eu
+    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}'`;
+    try {
+      return await dbconnexion.db.query(request);
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  async userEvents(idUser) {
+    const request = `SELECT * FROM "EVENT" e 
+    JOIN "EVENT_USER" eu ON eu."ID_EVENT" = e."ID_EVENT"
+    WHERE eu."ID_USER" ='${idUser}'`;
+
+    try {
+      const results = await dbconnexion.db.query(request);
+      if (!results || results[0].length === 0) { return null; }
+      return results[0];
+    } catch (e) {
+      throw e;
+    }
+  },
 };
 
 export default dbService;

@@ -7,10 +7,20 @@ const router = Router();
 // Middleware qui check le webtoken
 /* router.use((req, res, next) => {
   const auth = req.headers.authorization;
-  if (auth && webtoken.verifyToken(auth.split(' ')[1])) {
-    return next();
+  if (!auth || !webtoken.verifyToken(auth.split(' ')[1])) {
+    return res.status(401).send({ err: 'User not authentified' });
   }
-  return res.status(401).send('User not authentified');
+  const { idUser } = req.query;
+  const decodeToken = webtoken.decode(auth.split(' ')[1]);
+
+  if (!decodeToken) { return res.status(500).send({ err: 'Impossible to decode token' }); }
+
+  console.log(idUser, decodeToken.payload);
+  if (decodeToken.payload.idUser !== idUser) {
+    return res.status(401).send({ err: 'IdUser and webtoken don\'t match' });
+  }
+
+  return next();
 }); */
 
 /**
@@ -43,22 +53,22 @@ router.route('/userProfile').get(async (req, res) => {
  */
 router.route('/updateProfile').post(async (req, res) => {
   const {
-    idUser, tags, description, linkPicture, firstname, lastname,
+    idUser, tagsArray, description, linkPicture, firstname, lastname,
   } = req.body;
 
   // Check parameters
-  if (!idUser || !tags || !description || !linkPicture
+  if (!idUser || !tagsArray || !description || !linkPicture
       || !firstname || !lastname) { return res.status(400).send('Missing Parameters'); }
 
   // Check types
-  if (typeof idUser !== 'string' || !Array.isArray(tags)
+  if (typeof idUser !== 'string' || !Array.isArray(tagsArray)
     || typeof description !== 'string' || typeof linkPicture !== 'string'
     || typeof firstname !== 'string' || typeof lastname !== 'string') {
     return res.status(400).send('Bad parameters');
   }
 
   try {
-    await dbService.updateProfile(idUser, linkPicture, description, tags, firstname, lastname);
+    await dbService.updateProfile(idUser, linkPicture, description, tagsArray, firstname, lastname);
   } catch (e) {
     console.error(e);
     return res.status(500).send({ err: 'Error when updating the profile of the user' });
