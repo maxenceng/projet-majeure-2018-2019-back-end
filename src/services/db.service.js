@@ -269,7 +269,7 @@ const dbService = {
       throw e;
     }
 
-    tags.forEach(async (tag) => {
+    tags.map(async (tag) => {
       try {
         await dbconnexion.tag.create({
           TAG_EVENT: uuidEvent,
