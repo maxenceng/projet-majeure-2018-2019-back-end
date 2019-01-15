@@ -17,6 +17,7 @@ router.route('/allEvents').get(async (req, res) => {
   } = req.query;
   let tabTags;
   let locationObj;
+  const formattedDate = parseInt(date, 10);
 
   try {
     locationObj = JSON.parse(location);
@@ -36,7 +37,7 @@ router.route('/allEvents').get(async (req, res) => {
     return res.status(400).send({ err: 'Lat or lng is not defined' });
   }
   // Check date type
-  if (date && typeof date !== typeof 2) { return res.status(400).send({ err: 'Wrong date type' }); }
+  if (date && typeof formattedDate !== typeof 2) { return res.status(400).send({ err: 'Wrong date type' }); }
 
   // Check tags
   if (tags && typeof tags !== typeof 'string') {
@@ -50,11 +51,11 @@ router.route('/allEvents').get(async (req, res) => {
   }
 
   try {
-    const result = await dbService.allEvents(date, locationObj, tabTags, price);
+    const result = await dbService.allEvents(formattedDate, locationObj, tabTags, price);
     if (result[0]) {
       return res.status(200).send({ message: 'Get events ok!', events: result[0] });
     }
-    return res.status(200).send({ message: 'Get events ok!', events: null });
+    return res.status(200).send({ message: 'Get events ok!', events: [] });
   } catch (e) {
     console.error(e);
     return res.status(500).send({ err: 'Error append when getting events' });
