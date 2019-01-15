@@ -19,8 +19,8 @@ const dbService = {
     // Query DB
     let result;
     try {
-      result = await dbconnexion.db.query(`SELECT "ID_USER", "USER_NAME", "USER_FIRSTNAME", 
-      "USER_EMAIL" FROM "USER" WHERE "USER_PWD" = '${hashpwd}' AND "USER_EMAIL" = '${email}'`);
+      result = await dbconnexion.db.query(`SELECT "ID_USER"
+      FROM "USER" WHERE "USER_PWD" = '${hashpwd}' AND "USER_EMAIL" = '${email}'`);
     } catch (e) { throw e; }
     return result;
   },
@@ -76,16 +76,18 @@ const dbService = {
   async createMessage(message, idExp, idDest) {
     // Fonction permettant de créer une conv
     const createConv = async (uuidConv, idUser) => {
-      await dbconnexion.convUser.create({
-        ID_CONV: uuidConv,
-        ID_USER: idUser,
-      });
+      try {
+        await dbconnexion.convUser.create({
+          ID_CONV: uuidConv,
+          ID_USER: idUser,
+        });
+      } catch (e) { throw e; }
     };
 
-    const requestConvUserExistance = `(SELECT c."ID_CONVERSATION" FROM "CONVERSATION" c
+    const requestConvUserExistence = `(SELECT c."ID_CONVERSATION" FROM "CONVERSATION" c
     JOIN "CONV_USER" cu ON cu."ID_CONV" = c."ID_CONVERSATION"
     WHERE cu."ID_USER" = '${idDest}')
-    UNION
+    INTERSECT
     (SELECT c2."ID_CONVERSATION" FROM "CONVERSATION" c2
     JOIN "CONV_USER" cu2 ON cu2."ID_CONV" = c2."ID_CONVERSATION"
     WHERE cu2."ID_USER" = '${idExp}')`;
@@ -93,7 +95,7 @@ const dbService = {
     // Check pour savoir si une conversation n'existe pas déjà
     let existenceConv;
     try {
-      existenceConv = await dbconnexion.db.query(requestConvUserExistance);
+      existenceConv = await dbconnexion.db.query(requestConvUserExistence);
     } catch (e) {
       throw e;
     }
@@ -127,25 +129,64 @@ const dbService = {
   },
 
   async userConv(idUser) {
-    const request = `SELECT cu."ID_CONV" from "USER" u
-      JOIN "CONV_USER" cu ON cu."ID_USER" = '${idUser}'`;
+    const request = `SELECT cu."ID_CONV" from "CONV_USER" cu
+    WHERE cu."ID_USER" = '${idUser}'`;
 
+    const UsersInConv = {};
+
+    const researchUserInConv = async (idConv) => {
+      const requestUser = `SELECT u."USER_FIRSTNAME", u."USER_NAME", u."ID_USER"
+      FROM "CONV_USER" cu
+      JOIN "USER" u ON cu."ID_USER" = u."ID_USER"
+      WHERE cu."ID_CONV" = '${idConv}'`;
+
+      try {
+        const res = await dbconnexion.db.query(requestUser);
+        if (res && res[0].length !== 0 && res[0][0] !== idUser) {
+          UsersInConv[res[0][0].ID_USER] = {
+            USER_FIRSTNAME: res[0][0].USER_FIRSTNAME,
+            USER_NAME: res[0][0].USER_NAME,
+          };
+        }
+      } catch (e) {
+        throw e;
+      }
+    };
+
+    let result;
     try {
-      const result = await dbconnexion.db.query(request);
-      console.log(result);
-      return result;
+      result = await dbconnexion.db.query(request);
     } catch (e) {
       throw e;
     }
+
+    if (result && result[0].length !== 0) {
+      await Promise.all(result[0].map(async (conv) => {
+        try {
+          return await researchUserInConv(conv.ID_CONV);
+        } catch (e) {
+          throw e;
+        }
+      }));
+    }
+    console.log(UsersInConv);
+    return UsersInConv;
   },
 
-  async getMessages(idUser) {
-    const request = `SELECT m."MES_CONTENT", m."MES_AUTHOR", m."MES_DATE", u."USER_FIRSTNAME", u."USER_NAME", u."ID_USER"
+  async getMessages(idUser, idSecondUser) {
+    const request = `(SELECT m."MES_CONTENT", m."MES_AUTHOR", m."MES_DATE"
       FROM "MESSAGE" m
       JOIN "CONVERSATION" c ON m."MES_CONV" = c."ID_CONVERSATION"
       JOIN "CONV_USER" cu ON cu."ID_CONV" = c."ID_CONVERSATION"
-      JOIN "USER" u ON cu."ID_USER" = u."ID_USER" 
-      WHERE u."ID_USER" = '${idUser}'`;
+      JOIN "USER" u ON cu."ID_USER" = u."ID_USER"
+      WHERE u."ID_USER" = '${idUser}')
+      INTERSECT
+      (SELECT m2."MES_CONTENT", m2."MES_AUTHOR", m2."MES_DATE"
+      FROM "MESSAGE" m2
+      JOIN "CONVERSATION" c2 ON m2."MES_CONV" = c2."ID_CONVERSATION"
+      JOIN "CONV_USER" cu2 ON cu2."ID_CONV" = c2."ID_CONVERSATION"
+      JOIN "USER" u2 ON cu2."ID_USER" = u2."ID_USER"
+      WHERE u2."ID_USER" = '${idSecondUser}')`;
 
     try {
       return await dbconnexion.db.query(request);

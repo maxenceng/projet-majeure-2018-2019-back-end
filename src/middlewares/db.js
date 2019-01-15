@@ -112,7 +112,7 @@ class DBConnexion {
         primaryKey: true,
         allowNull: false,
       },
-      MES_DATE: Sequelize.DATE,
+      MES_DATE: Sequelize.BIGINT,
       MES_AUTHOR: Sequelize.STRING,
       MES_CONTENT: Sequelize.STRING,
       MES_CONV: {

@@ -6,13 +6,15 @@ const router = Router();
  * Route pour avoir tous les messages d'un utilisateur
  */
 router.route('/allMessages').get(async (req, res) => {
-  const { idUser } = req.query;
+  const { idUser, idSecondUser } = req.query;
 
   // On vérifie les types et existences
   if (!idUser || typeof idUser !== typeof 'string') { return res.status(400).send({ err: 'Bad parameters' }); }
 
+  if (!idSecondUser || typeof idSecondUser !== typeof 'string') { return res.status(400).send({ err: 'Bad parameters' }); }
+
   try {
-    const result = await dbService.getMessages(idUser);
+    const result = await dbService.getMessages(idUser, idSecondUser);
     if (result[0].length !== 0) { return res.status(200).send({ messages: result[0] }); }
     return res.status(200).send({ messages: null });
   } catch (e) {
@@ -32,7 +34,7 @@ router.route('/userConv').get(async (req, res) => {
 
   try {
     const result = await dbService.userConv(idUser);
-    if (result[0].length !== 0) { return res.status(200).send({ conversations: result[0] }); }
+    if (result) { return res.status(200).send({ conversations: result }); }
     return res.status(200).send({ conversations: null });
   } catch (e) {
     console.log(e);
