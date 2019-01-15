@@ -7,7 +7,8 @@
     "start": "babel-node index.js",
     "lint": "eslint .",
     "dev": "nodemon --exec babel-node index.js",
-    "script:events": "babel-node src/scripts/events.js"
+    "script:events": "babel-node src/scripts/events.js",
+    "script:chat": "babel-node src/scripts/chat.js"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
