@@ -93,7 +93,7 @@ class DBConnexion {
         primaryKey: true,
         allowNull: false,
       },
-      LOC_DISCTRICT: Sequelize.BIGINT,
+      LOC_DISTRICT: Sequelize.BIGINT,
       LOC_LONGITUDE: { type: Sequelize.NUMERIC, validate: { max: 180, min: -180 } },
       LOC_LATITUDE: { type: Sequelize.NUMERIC, validate: { max: 90, min: -90 } },
       LOC_EVENT: {
@@ -107,7 +107,8 @@ class DBConnexion {
 
     this.message = this.db.define('MESSAGE', {
       ID_MESSAGE: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.DataTypes.UUID,
+        defaultValue: Sequelize.DataTypes.UUIDV4,
         primaryKey: true,
         allowNull: false,
       },
@@ -193,8 +194,13 @@ class DBConnexion {
       freezeTableName: true,
       timestamps: false,
     });
+
+    this.convUser = this.db.define('CONV_USER', {}, {
+      freezeTableName: true,
+      timestamps: false,
+    });
     this.user.belongsToMany(this.event, { through: 'EVENT_USER', foreignKey: 'ID_USER', otherKey: 'ID_EVENT' });
-    this.user.belongsToMany(this.conversation, { through: 'CONV_USER', foreignKey: 'ID_USER', otherKey: 'ID_CONVERSATION' });
+    this.user.belongsToMany(this.conversation, { through: 'CONV_USER', foreignKey: 'ID_USER', otherKey: 'ID_CONV' });
   }
 }
 

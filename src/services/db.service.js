@@ -53,13 +53,13 @@ const dbService = {
 
         await dbconnexion.profile.create({
           ID_PROFILE: uuidProfile,
-          PROFILE_DESC: 'hello',
-          PROFILE_AVATAR: 'truc',
+          PROFILE_DESC: '',
+          PROFILE_AVATAR: '',
           PROFILE_USER: uuidUser,
         });
 
         await dbconnexion.tag.create({
-          TAG_TEXT: 'tagtag',
+          TAG_TEXT: '',
           TAG_PROFILE: uuidProfile,
         });
         // Création du profil associé à l'utilisateur
@@ -73,40 +73,80 @@ const dbService = {
     }
   },
 
-  async createMessage(message, author, idDest) {
-    const request = `SELECT c."ID_CONVERSATION" FROM "CONVERSATION" c 
-      JOIN "CONV_USER" cu ON cu."ID_CONV" = c."ID_CONVERSATION"
-      JOIN "USER" u ON cu."ID_USER" = u."ID_USER"
-      WHERE u."ID_USER" = '${idDest}'`;
-    let result;
+  async createMessage(message, idExp, idDest) {
+    // Fonction permettant de créer une conv
+    const createConv = async (uuidConv, idUser) => {
+      await dbconnexion.convUser.create({
+        ID_CONV: uuidConv,
+        ID_USER: idUser,
+      });
+    };
+
+    const requestConvUserExistance = `(SELECT c."ID_CONVERSATION" FROM "CONVERSATION" c
+    JOIN "CONV_USER" cu ON cu."ID_CONV" = c."ID_CONVERSATION"
+    WHERE cu."ID_USER" = '${idDest}')
+    UNION
+    (SELECT c2."ID_CONVERSATION" FROM "CONVERSATION" c2
+    JOIN "CONV_USER" cu2 ON cu2."ID_CONV" = c2."ID_CONVERSATION"
+    WHERE cu2."ID_USER" = '${idExp}')`;
+
+    // Check pour savoir si une conversation n'existe pas déjà
+    let existenceConv;
     try {
-      result = await dbconnexion.db.query(request);
+      existenceConv = await dbconnexion.db.query(requestConvUserExistance);
     } catch (e) {
       throw e;
     }
 
-    // Si pas de destinataire trouvé sur la db on renvoie une erreur
-    if (!result || result[0].length === 0) { throw new Error('Dest not found'); }
+    let idConv;
+    // Si la conversation n'existe pas déjà on créé une conversation entre les deux utilisateurs
+    if (!existenceConv || existenceConv[0].length === 0) {
+      const uuidConv = uuidv4();
+      try {
+        await dbconnexion.conversation.create({ ID_CONVERSATION: uuidConv });
+        await createConv(uuidConv, idDest);
+        await createConv(uuidConv, idExp);
+      } catch (e) {
+        throw e;
+      }
+      idConv = uuidConv;
+    } else { idConv = existenceConv[0][0].ID_CONVERSATION; }
 
+    // On créé le message correspondant
     try {
       await dbconnexion.message.create({
-        ID_CONVERSATION: result[0].ID_CONVERSATION,
-        MES_AUTHOR: author,
+        MES_CONV: idConv,
+        MES_AUTHOR: idExp,
         // miliseconds depuis le 1 er janvier 1970
-        MES_DATA: Date.now(),
-        MES_MESSAGE: message,
+        MES_DATE: Date.now(),
+        MES_CONTENT: message,
       });
     } catch (e) {
       throw e;
     }
   },
 
+  async userConv(idUser) {
+    const request = `SELECT cu."ID_CONV" from "USER" u
+      JOIN "CONV_USER" cu ON cu."ID_USER" = '${idUser}'`;
+
+    try {
+      const result = await dbconnexion.db.query(request);
+      console.log(result);
+      return result;
+    } catch (e) {
+      throw e;
+    }
+  },
+
   async getMessages(idUser) {
-    const request = `SELECT * FROM "MESSAGE" m 
+    const request = `SELECT m."MES_CONTENT", m."MES_AUTHOR", m."MES_DATE", u."USER_FIRSTNAME", u."USER_NAME", u."ID_USER"
+      FROM "MESSAGE" m
       JOIN "CONVERSATION" c ON m."MES_CONV" = c."ID_CONVERSATION"
       JOIN "CONV_USER" cu ON cu."ID_CONV" = c."ID_CONVERSATION"
       JOIN "USER" u ON cu."ID_USER" = u."ID_USER" 
       WHERE u."ID_USER" = '${idUser}'`;
+
     try {
       return await dbconnexion.db.query(request);
     } catch (e) {
@@ -116,10 +156,10 @@ const dbService = {
 
   async profileUser(idUser) {
     const request = `SELECT p."PROFILE_DESC", p."PROFILE_AVATAR", t."TAG_TEXT", u."USER_FIRSTNAME", u."USER_NAME"
-      FROM "TAG" t
-      JOIN "PROFILE" p ON t."TAG_PROFILE" = p."ID_PROFILE"
-      JOIN "USER" u ON p."PROFILE_USER" = u."ID_USER"
-      WHERE u."ID_USER" = '${idUser}'`;
+    FROM "USER" u
+    JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
+    JOIN "TAG" t ON t."TAG_PROFILE" = p."ID_PROFILE"
+    WHERE u."ID_USER" = '${idUser}'`;
     let profile;
     try {
       profile = await dbconnexion.db.query(request);
@@ -228,7 +268,7 @@ const dbService = {
     }
   },
 
-  async addEvent(date, location, tags, media, eventName, eventDesc) {
+  async addEvent(date, location, city, tags, media, eventName, eventDesc) {
     const { lng, lat } = location;
     const uuidEvent = uuidv4();
 
@@ -251,7 +291,7 @@ const dbService = {
     try {
       await dbconnexion.location.create({
         LOC_EVENT: uuidEvent,
-        LOC_DISCTRICT: 0,
+        LOC_DISTRICT: city,
         LOC_LONGITUDE: lng,
         LOC_LATITUDE: lat,
       });

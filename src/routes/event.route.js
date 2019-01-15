@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import webtoken from '../middlewares/webtoken';
 import dbService from '../services/db.service';
+import findCity from '../services/opencage.service';
 
 const router = Router();
 
@@ -166,8 +167,16 @@ router.route('/addEvent').post(async (req, res) => {
       return res.status(400).send({ err: 'Wrong preferences type' });
     }
 
+    // On essaye de trouver la ville associée
+    let city;
     try {
-      await dbService.addEvent(date, location, tags, media, eventName, eventDesc);
+      city = await findCity(location.lat, location.lng);
+    } catch (e) {
+      city = null;
+    }
+
+    try {
+      await dbService.addEvent(date, location, city, tags, media, eventName, eventDesc);
       return res.status(200).send({ message: 'Event well added!' });
     } catch (e) {
       console.error(e);
