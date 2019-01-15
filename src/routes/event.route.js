@@ -188,6 +188,9 @@ router.route('/addEvent').post(async (req, res) => {
   }
 });
 
+/**
+ * Get the different events where the user is participating
+ */
 router.route('/userEvents').get(async (req, res) => {
   const { idUser } = req.query;
 
@@ -199,6 +202,23 @@ router.route('/userEvents').get(async (req, res) => {
   } catch (e) {
     console.error(e);
     return res.status(500).send({ err: 'Error append when getting events for the user' });
+  }
+});
+
+/**
+ * Find all users that participate to the event and send some informations about the event
+ */
+router.route('/event').get(async (req, res) => {
+  const { idEvent } = req.query;
+
+  if (!idEvent || typeof idEvent !== 'string') { return res.status(400).send({ err: 'idEvent is not defined' }); }
+
+  try {
+    const event = await dbService.event(idEvent);
+    return res.status(200).send({ event });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send({ err: 'Error append when getting the event' });
   }
 });
 

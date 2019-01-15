@@ -285,11 +285,14 @@ const dbService = {
       realDate = date;
     }
 
-    let request = `SELECT * FROM "EVENT" e
+    let request = `SELECT l."LOC_LATITUDE", l."LOC_LONGITUDE", e."ID_EVENT", e."EVENT_DATE", l."LOC_DISTRICT",
+    e."EVENT_DESC", e."EVENT_NAME", m."MEDIA_TYPE", m."MEDIA_CONTENT" FROM "EVENT" e
     JOIN "LOCATION" l ON e."ID_EVENT" = l."LOC_EVENT"
+    JOIN "MEDIA" m on e."ID_EVENT" = m."MEDIA_EVENT"
     AND l."LOC_LATITUDE" < ${lat + 1} AND l."LOC_LATITUDE" > ${lat - 1}
     AND l."LOC_LONGITUDE" < ${lng + 1} AND l."LOC_LONGITUDE" > ${lng - 1}
-    AND e."EVENT_DATE" > ${realDate} AND e."EVENT_DATE" < ${realDate + 1000 * 3600 * 24 * 10}`;
+    AND e."EVENT_DATE" > ${realDate} AND e."EVENT_DATE" < ${realDate + 1000 * 3600 * 24 * 10}
+    LIMIT 40`;
 
     const requestPreferences = async preference => `e."EVENT_TAG" = ${preference} OR`;
 
@@ -417,6 +420,22 @@ const dbService = {
     const request = `SELECT * FROM "EVENT" e 
     JOIN "EVENT_USER" eu ON eu."ID_EVENT" = e."ID_EVENT"
     WHERE eu."ID_USER" ='${idUser}'`;
+
+    try {
+      const results = await dbconnexion.db.query(request);
+      if (!results || results[0].length === 0) { return null; }
+      return results[0];
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  async event(idEvent) {
+    const request = `SELECT e."EVENT_NAME", e."EVENT_DESC", eu."ID_USER", u."USER_FIRSTNAME", u."USER_NAME"
+    FROM "EVENT_USER" eu
+    JOIN "EVENT" e ON e."ID_EVENT" = '${idEvent}'
+    JOIN "USER" u ON eu."ID_USER" = u."ID_USER"
+    LIMIT 10`;
 
     try {
       const results = await dbconnexion.db.query(request);

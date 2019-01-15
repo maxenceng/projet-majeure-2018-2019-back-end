@@ -3,9 +3,9 @@ import dbService from '../services/db.service';
 
 const router = Router();
 /**
- * Route pour avoir tous les messages d'un utilisateur
+ * Route pour avoir tous les messages d'une conversation
  */
-router.route('/allMessages').get(async (req, res) => {
+router.route('/conv').get(async (req, res) => {
   const { idUser, idSecondUser } = req.query;
 
   // On vérifie les types et existences
@@ -24,7 +24,7 @@ router.route('/allMessages').get(async (req, res) => {
 });
 
 /**
- * Route pour avoir tous les messages d'un utilisateur
+ * Route pour avoir toutes les conversations d'un utilisateur
  */
 router.route('/userConv').get(async (req, res) => {
   const { idUser } = req.query;
