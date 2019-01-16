@@ -1,6 +1,8 @@
 import { Router } from 'express';
+import xss from 'xss';
 import dbService from '../services/db.service';
 import webtoken from '../middlewares/webtoken';
+
 
 const router = Router();
 
@@ -14,6 +16,13 @@ const router = Router();
   const decodeToken = webtoken.decode(auth.split(' ')[1]);
 
   if (!decodeToken) { return res.status(500).send({ err: 'Impossible to decode token' }); }
+
+  const queryValues = Object.values(req.query);
+
+  queryValues.forEach((value) => {
+    if (xss(value)) { return res.status(400).send({ err: 'XSS attack detected' }); }
+    return null;
+  });
 
   console.log(idUser, decodeToken.payload);
   if (decodeToken.payload.idUser !== idUser) {

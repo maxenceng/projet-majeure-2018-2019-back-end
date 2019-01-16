@@ -10,6 +10,7 @@ import chatRouter from './src/routes/chat.route';
 import userRouter from './src/routes/user.route';
 import eventRouter from './src/routes/event.route';
 import ChatAsync from './src/routes/chatasync.route';
+import openid from './src/services/openID.service';
 
 
 // TODO

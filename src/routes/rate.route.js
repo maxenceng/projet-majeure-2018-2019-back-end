@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import webtoken from '../middlewares/webtoken';
 
 const router = Router();
 
