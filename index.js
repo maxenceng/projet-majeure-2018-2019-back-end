@@ -21,14 +21,13 @@ const corsOptions = {
 class Server {
   constructor(port) {
     this.app = express();
-    const server = http.createServer(this.app);
+    this.app.use(bodyParser.json());
+    this.app.use(cors());
+    this.initRoutesREST();
+    const server = this.app.listen(port);
+    // Attach Socket IO to the server
     this.io = io(server);
-    this.app.listen(port, () => {
-      this.app.use(bodyParser.json());
-      this.app.use(cors());
-      this.initRoutesREST();
-      this.chatAsync = new ChatAsync(this.io);
-    });
+    this.chatAsync = new ChatAsync(this.io);
   }
 
   initRoutesREST() {

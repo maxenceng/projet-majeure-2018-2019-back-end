@@ -138,7 +138,7 @@ const dbService = {
       const requestUser = `SELECT u."USER_FIRSTNAME", u."USER_NAME", u."ID_USER"
       FROM "CONV_USER" cu
       JOIN "USER" u ON cu."ID_USER" = u."ID_USER"
-      WHERE cu."ID_CONV" = '${idConv}' OR u."ID_USER" != '${idUser}'`;
+      WHERE cu."ID_CONV" = '${idConv}' AND u."ID_USER" != '${idUser}'`;
 
       try {
         const res = await dbconnexion.db.query(requestUser);
