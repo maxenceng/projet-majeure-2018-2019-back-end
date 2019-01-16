@@ -417,8 +417,9 @@ const dbService = {
   },
 
   async userEvents(idUser) {
-    const request = `SELECT * FROM "EVENT" e 
+    const request = `SELECT m."MEDIA_CONTENT", m."MEDIA_TYPE", e."EVENT_NAME", e."EVENT_DATE", e."ID_EVENT", e."EVENT_DESC" FROM "EVENT" e 
     JOIN "EVENT_USER" eu ON eu."ID_EVENT" = e."ID_EVENT"
+    JOIN "MEDIA" m on e."ID_EVENT" = m."MEDIA_EVENT"
     WHERE eu."ID_USER" ='${idUser}'`;
 
     try {
