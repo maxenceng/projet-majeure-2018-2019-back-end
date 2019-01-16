@@ -12,19 +12,20 @@ const router = Router();
   if (!auth || !webtoken.verifyToken(auth.split(' ')[1])) {
     return res.status(401).send({ err: 'User not authentified' });
   }
-  const { idUser } = req.query;
+
+  const { idUser } = req.query.idUser ? req.query : req.body;
+
   const decodeToken = webtoken.decode(auth.split(' ')[1]);
 
   if (!decodeToken) { return res.status(500).send({ err: 'Impossible to decode token' }); }
 
+  // Vérification XSS
   const queryValues = Object.values(req.query);
+  const verificationXSS = queryValues.map(value => xss(value));
+  if (JSON.stringify(verificationXSS) !== JSON.stringify(queryValues)) {
+    return res.status(401).send({ err: 'XSS detected' });
+  }
 
-  queryValues.forEach((value) => {
-    if (xss(value)) { return res.status(400).send({ err: 'XSS attack detected' }); }
-    return null;
-  });
-
-  console.log(idUser, decodeToken.payload);
   if (decodeToken.payload.idUser !== idUser) {
     return res.status(401).send({ err: 'IdUser and webtoken don\'t match' });
   }

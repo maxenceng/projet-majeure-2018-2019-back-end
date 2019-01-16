@@ -235,4 +235,21 @@ router.route('/event').get(async (req, res) => {
   }
 });
 
+/**
+ * Find all users that may be interested to participate to the event
+ */
+router.route('/usersInterestedEvent').get(async (req, res) => {
+  const { idEvent } = req.query;
+
+  if (!idEvent || typeof idEvent !== 'string') { return res.status(400).send({ err: 'idEvent is not defined' }); }
+
+  try {
+    const users = await dbService.userInterrestedEvent(idEvent);
+    return res.status(200).send({ users });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send({ err: 'Error append when getting the event' });
+  }
+});
+
 export default router;

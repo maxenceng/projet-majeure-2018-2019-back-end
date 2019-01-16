@@ -3,7 +3,6 @@ import authController from '../controllers/authentification.controller';
 import webtoken from '../middlewares/webtoken';
 
 const router = Router();
-// TODO Transmettre la DB au controller
 /**
  * Route Signin pour le site, vérifie tous les paramètres sont présents
  */

@@ -20,8 +20,6 @@ class DBConnexion {
           idle: 10000,
         },
       });
-
-    // TODO faire ça après l'init de la db
     this.init();
   }
 

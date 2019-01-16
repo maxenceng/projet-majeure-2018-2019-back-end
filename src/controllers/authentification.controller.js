@@ -11,9 +11,10 @@ const authController = {
     } catch (e) { throw e; }
 
     if (result[0].length !== 0) {
-      const user = result[0];
-      const { idUser } = user;
+      const user = result[0][0];
+      const idUser = user.ID_USER;
       let admin = false;
+      // TODO voir ça
       if (user.admin) { admin = true; }
       const payload = {
         admin,

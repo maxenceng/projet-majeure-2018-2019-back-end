@@ -21,8 +21,6 @@ export default class ChatRoutes {
           socket.emit({ message: 'Connexion Chat success' });
         } else {
           socket.emit({ err: 'Connexion Chat Error, No iduser found' });
-          // On envoie un petit signal au client pour lui dire que c'est la merde
-          // TODO
         }
       });
 

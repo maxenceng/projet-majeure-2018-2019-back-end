@@ -138,7 +138,7 @@ const dbService = {
       const requestUser = `SELECT u."USER_FIRSTNAME", u."USER_NAME", u."ID_USER"
       FROM "CONV_USER" cu
       JOIN "USER" u ON cu."ID_USER" = u."ID_USER"
-      WHERE cu."ID_CONV" = '${idConv}'`;
+      WHERE cu."ID_CONV" = '${idConv}' OR u."ID_USER" != '${idUser}'`;
 
       try {
         const res = await dbconnexion.db.query(requestUser);
@@ -178,15 +178,13 @@ const dbService = {
       FROM "MESSAGE" m
       JOIN "CONVERSATION" c ON m."MES_CONV" = c."ID_CONVERSATION"
       JOIN "CONV_USER" cu ON cu."ID_CONV" = c."ID_CONVERSATION"
-      JOIN "USER" u ON cu."ID_USER" = u."ID_USER"
-      WHERE u."ID_USER" = '${idUser}')
+      WHERE cu."ID_USER" = '${idUser}')
       INTERSECT
       (SELECT m2."MES_CONTENT", m2."MES_AUTHOR", m2."MES_DATE"
       FROM "MESSAGE" m2
       JOIN "CONVERSATION" c2 ON m2."MES_CONV" = c2."ID_CONVERSATION"
       JOIN "CONV_USER" cu2 ON cu2."ID_CONV" = c2."ID_CONVERSATION"
-      JOIN "USER" u2 ON cu2."ID_USER" = u2."ID_USER"
-      WHERE u2."ID_USER" = '${idSecondUser}')`;
+      WHERE cu2."ID_USER" = '${idSecondUser}')`;
 
     try {
       return await dbconnexion.db.query(request);
@@ -296,7 +294,6 @@ const dbService = {
 
     const requestPreferences = async preference => `e."EVENT_TAG" = ${preference} OR`;
 
-    // TODO faire plus plusieurs préférences
     if (tags) {
       request += 'AND';
       tags.forEach(async (pref) => {
@@ -437,6 +434,26 @@ const dbService = {
     JOIN "EVENT" e ON e."ID_EVENT" = '${idEvent}'
     JOIN "USER" u ON eu."ID_USER" = u."ID_USER"
     JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
+    LIMIT 100`;
+
+    try {
+      const results = await dbconnexion.db.query(request);
+      if (!results || results[0].length === 0) { return null; }
+      return results[0];
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  async userInterrestedEvent(idEvent) {
+    const request = `SELECT eu."ID_USER", u."USER_FIRSTNAME", u."USER_NAME", p."PROFILE_AVATAR", p."PROFILE_DESC"
+    FROM "EVENT_USER" eu
+    JOIN "EVENT" e ON e."ID_EVENT" = '${idEvent}'
+    JOIN "TAG" te ON e."ID_EVENT" = te."TAG_EVENT"
+    JOIN "USER" u ON eu."ID_USER" = u."ID_USER"
+    JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
+    JOIN "TAG" tu ON tu."TAG_PROFILE" = p."ID_PROFILE"
+    WHERE tu."TAG_TEXT" = te."TAG_TEXT" 
     LIMIT 100`;
 
     try {
