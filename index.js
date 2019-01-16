@@ -9,6 +9,7 @@ import authRouter from './src/routes/authentification.route';
 import chatRouter from './src/routes/chat.route';
 import userRouter from './src/routes/user.route';
 import eventRouter from './src/routes/event.route';
+import ChatAsync from './src/routes/chatasync.route';
 
 
 // TODO
@@ -25,6 +26,7 @@ class Server {
       this.app.use(bodyParser.json());
       this.app.use(cors());
       this.initRoutesREST();
+      this.chatAsync = new ChatAsync(this.io);
     });
   }
 

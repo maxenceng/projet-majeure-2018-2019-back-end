@@ -4,9 +4,11 @@ export default class ChatRoutes {
   constructor(io) {
     this.io = io;
     this.usersConnected = {};
+    this.initRoutes();
   }
 
   initRoutes() {
+    console.log('socket.io started!!');
     this.io.on('connection', (socket) => {
       socket.on('connection', () => {
         console.log(`New WebSocket Client : ${socket.id}`);
