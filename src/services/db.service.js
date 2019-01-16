@@ -431,11 +431,12 @@ const dbService = {
   },
 
   async event(idEvent) {
-    const request = `SELECT eu."ID_USER", u."USER_FIRSTNAME", u."USER_NAME"
+    const request = `SELECT eu."ID_USER", u."USER_FIRSTNAME", u."USER_NAME", p."PROFILE_AVATAR", p."PROFILE_DESC"
     FROM "EVENT_USER" eu
     JOIN "EVENT" e ON e."ID_EVENT" = '${idEvent}'
     JOIN "USER" u ON eu."ID_USER" = u."ID_USER"
-    LIMIT 30`;
+    JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
+    LIMIT 100`;
 
     try {
       const results = await dbconnexion.db.query(request);

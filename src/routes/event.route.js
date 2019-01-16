@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import webtoken from '../middlewares/webtoken';
 import dbService from '../services/db.service';
-import findCity from '../services/opencage.service';
+import opencage from '../services/opencage.service';
 
 const router = Router();
 
@@ -15,27 +15,40 @@ router.route('/allEvents').get(async (req, res) => {
   const {
     date, location, tags, price,
   } = req.query;
+
   let tabTags;
   let locationObj;
   const formattedDate = parseInt(date, 10);
 
   try {
     locationObj = JSON.parse(location);
+    // Check parameter location
+    if (!locationObj || typeof locationObj !== typeof JSON.parse('{"test": "test"}')) {
+      return res.status(400).send({ err: 'Location is missing' });
+    }
+
+    // Check location type
+    if (!locationObj.lng || !locationObj.lat
+      || typeof locationObj.lng !== typeof 2 || typeof locationObj.lat !== typeof 2) {
+      return res.status(400).send({ err: 'Lat or lng is not defined' });
+    }
   } catch (e) {
     console.error(e);
-    return res.status(400).send({ err: 'Location is missing or malformed' });
   }
 
-  // Check parameter location
-  if (!locationObj || typeof locationObj !== typeof JSON.parse('{"test": "test"}')) {
-    return res.status(400).send({ err: 'Location is missing' });
+  if (!locationObj) {
+    try {
+      const result = await opencage.findCoord(location);
+      locationObj = {
+        lat: result.results[0].geometry.lat,
+        lng: result.results[0].geometry.lng,
+      };
+    } catch (e) {
+      console.error(e);
+      return res.status(404).send({ err: 'City not found' });
+    }
   }
 
-  // Check location type
-  if (!locationObj.lng || !locationObj.lat
-    || typeof locationObj.lng !== typeof 2 || typeof locationObj.lat !== typeof 2) {
-    return res.status(400).send({ err: 'Lat or lng is not defined' });
-  }
   // Check date type
   if (date && typeof formattedDate !== typeof 2) { return res.status(400).send({ err: 'Wrong date type' }); }
 
@@ -171,7 +184,7 @@ router.route('/addEvent').post(async (req, res) => {
     // On essaye de trouver la ville associée
     let city;
     try {
-      city = await findCity(location.lat, location.lng);
+      city = await opencage.findCity(location.lat, location.lng);
     } catch (e) {
       city = null;
     }
