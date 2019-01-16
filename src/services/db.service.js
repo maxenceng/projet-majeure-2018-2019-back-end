@@ -376,7 +376,7 @@ const dbService = {
     }
 
     // On check si il participe déja
-    if (!existence || existence[0].length !== 0) { throw new Error('User is already participating to the event'); }
+    if (existence && existence[0].length !== 0) { throw new Error('User is already participating to the event'); }
 
     try {
       await dbconnexion.eventUser.create({
@@ -463,6 +463,23 @@ const dbService = {
     } catch (e) {
       throw e;
     }
+  },
+
+  async userParticipateEvent(idUser, idEvent) {
+    const requestExistance = `SELECT * FROM "EVENT_USER" 
+    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}'`;
+
+    let existence;
+    try {
+      existence = await dbconnexion.db.query(requestExistance);
+    } catch (e) {
+      throw e;
+    }
+    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    console.log(existence);
+    // On check si il participe déja
+    if (!existence || existence[0].length === 0) { return false; }
+    return true;
   },
 };
 
