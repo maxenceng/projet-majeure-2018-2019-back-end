@@ -238,7 +238,7 @@ router.route('/event').get(async (req, res) => {
 /**
  * Find all users that may be interested to participate to the event
  */
-router.route('/usersInterestedEvent').get(async (req, res) => {
+router.route('/participationOrNot').get(async (req, res) => {
   const { idEvent } = req.query;
 
   if (!idEvent || typeof idEvent !== 'string') { return res.status(400).send({ err: 'idEvent is not defined' }); }
@@ -249,6 +249,27 @@ router.route('/usersInterestedEvent').get(async (req, res) => {
   } catch (e) {
     console.error(e);
     return res.status(500).send({ err: 'Error append when getting the event' });
+  }
+});
+
+/**
+ * Verification, if a user participate at an event or not
+ */
+router.route('/userParticipateEvent').get(async (req, res) => {
+  const { idUser, idEvent } = req.query;
+
+  // Check idUser
+  if (!idUser || typeof idUser !== 'string') { return res.status(400).send({ err: 'idUser is not defined' }); }
+
+  // Check idEvent
+  if (!idEvent || typeof idEvent !== 'string') { return res.status(400).send({ err: 'idEvent is not defined' }); }
+
+  try {
+    const participation = await dbService.userParticipateEvent(idUser, idEvent);
+    return res.status(200).send({ participation });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send({ err: 'Error append when looking for the participation' });
   }
 });
 
