@@ -127,7 +127,7 @@ router.route('/participateEvent').get(async (req, res) => {
 /**
  * route called when a user says he put an event in favorite
  */
-router.route('/favoriteEvent').get(async (req, res) => {
+router.route('/favoriteUserEvent').get(async (req, res) => {
   const { idUser, idEvent } = req.query;
 
   // Check idUser
@@ -137,7 +137,7 @@ router.route('/favoriteEvent').get(async (req, res) => {
   if (!idEvent || typeof idEvent !== 'string') { return res.status(400).send({ err: 'idEvent is not defined' }); }
 
   try {
-    await dbService.userEvent(idUser, idEvent, false);
+    await dbService.favoriteEvent(idUser, idEvent);
     return res.status(200).send({ message: 'Favorite accepted' });
   } catch (e) {
     console.error(e);
@@ -146,7 +146,7 @@ router.route('/favoriteEvent').get(async (req, res) => {
 });
 
 /**
- * route called when the user remove his particiapation for the event
+ * route called when the user remove his favorite for the event
  */
 router.route('/removeFavorite').get(async (req, res) => {
   const { idUser, idEvent } = req.query;
@@ -158,7 +158,7 @@ router.route('/removeFavorite').get(async (req, res) => {
   if (!idEvent || typeof idEvent !== 'string') { return res.status(400).send({ err: 'idEvent is not defined' }); }
 
   try {
-    await dbService.cancelUserEvent(idUser, idEvent, false);
+    await dbService.removeFavorite(idUser, idEvent, false);
     return res.status(200).send({ message: 'Favorite on event cancelled' });
   } catch (e) {
     console.error(e);
@@ -273,7 +273,24 @@ router.route('/event').get(async (req, res) => {
     return res.status(200).send({ event });
   } catch (e) {
     console.error(e);
-    return res.status(500).send({ err: 'Error append when getting the event' });
+    return res.status(500).send({ err: 'Error append when check for participants of the event' });
+  }
+});
+
+/**
+ * Find all users have the event in favorite
+ */
+router.route('/eventFavorites').get(async (req, res) => {
+  const { idEvent } = req.query;
+
+  if (!idEvent || typeof idEvent !== 'string') { return res.status(400).send({ err: 'idEvent is not defined' }); }
+
+  try {
+    const event = await dbService.eventFavorites(idEvent);
+    return res.status(200).send({ event });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send({ err: 'Error append when get the user that have the event in favorite' });
   }
 });
 
@@ -312,6 +329,27 @@ router.route('/userParticipateEvent').get(async (req, res) => {
   } catch (e) {
     console.error(e);
     return res.status(500).send({ err: 'Error append when looking for the participation' });
+  }
+});
+
+/**
+ * Verification, if a user has an event in favorite
+ */
+router.route('/userFavoriteEvent').get(async (req, res) => {
+  const { idUser, idEvent } = req.query;
+
+  // Check idUser
+  if (!idUser || typeof idUser !== 'string') { return res.status(400).send({ err: 'idUser is not defined' }); }
+
+  // Check idEvent
+  if (!idEvent || typeof idEvent !== 'string') { return res.status(400).send({ err: 'idEvent is not defined' }); }
+
+  try {
+    const favorite = await dbService.userFavoriteEvent(idUser, idEvent);
+    return res.status(200).send({ favorite });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send({ err: 'Error append when looking for the favorite' });
   }
 });
 

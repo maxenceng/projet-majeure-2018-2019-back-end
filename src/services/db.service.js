@@ -419,12 +419,26 @@ const dbService = {
     return true;
   },
 
-  async favoriteEvent(idUser, idEvent, nature) {
+  async userParticipateEvent(idUser, idEvent) {
+    const requestExistance = `SELECT * FROM "EVENT_USER" eu
+    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}' AND "PARTICIPATE" = true`;
+
+    let existence;
+    try {
+      existence = await dbconnexion.db.query(requestExistance);
+    } catch (e) {
+      throw e;
+    }
+    // On check si il participe déja
+    if (!existence || existence[0].length === 0) { return false; }
+    return true;
+  },
+
+  async favoriteEvent(idUser, idEvent) {
     let existence;
     const requestExistance = `SELECT * FROM "EVENT_USER" 
       WHERE "ID_USER" = '${idUser}' 
-      AND "ID_EVENT" = '${idEvent}' 
-      AND "PARTICIPATE" = ${nature}`;
+      AND "ID_EVENT" = '${idEvent}'`;
 
     try {
       existence = await dbconnexion.db.query(requestExistance);
@@ -432,16 +446,60 @@ const dbService = {
       throw e;
     }
 
-    // On check si il n'a jamais participé
-    if (!existence || existence[0].length === 0) { throw new Error('User did not participate at this event in the first place'); }
+    // On check si il participe déja
+    if (existence && existence[0].length !== 0) {
+      const requestUpdateParticipation = `UPDATE "EVENT_USER" eu
+      SET "FAVORITE" = true
+      WHERE "ID_USER" = '${idUser}' 
+      AND "ID_EVENT" = '${idEvent}'`;
 
-    const request = `DELETE FROM "EVENT_USER" eu
-    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}'`;
+      try {
+        await dbconnexion.db.query(requestUpdateParticipation);
+      } catch (e) {
+        throw e;
+      }
+    } else {
+      try {
+        await dbconnexion.eventUser.create({
+          ID_USER: idUser,
+          ID_EVENT: idEvent,
+          PARTICIPATE: false,
+          FAVORITE: true,
+        });
+      } catch (e) {
+        throw e;
+      }
+    }
+  },
+
+  async removeFavorite(idUser, idEvent) {
+    const requestCancelParticipation = `UPDATE "EVENT_USER" eu
+      SET "FAVORITE" = false
+      WHERE "ID_USER" = '${idUser}' 
+      AND "ID_EVENT" = '${idEvent}'`;
+
     try {
-      return await dbconnexion.db.query(request);
+      await dbconnexion.db.query(requestCancelParticipation);
     } catch (e) {
       throw e;
     }
+
+    return true;
+  },
+
+  async userFavoriteEvent(idUser, idEvent) {
+    const requestExistance = `SELECT * FROM "EVENT_USER" eu
+    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}' AND "FAVORITE" = true`;
+
+    let existence;
+    try {
+      existence = await dbconnexion.db.query(requestExistance);
+    } catch (e) {
+      throw e;
+    }
+    // On check si il participe déja
+    if (!existence || existence[0].length === 0) { return false; }
+    return true;
   },
 
   async userEvents(idUser) {
@@ -459,12 +517,31 @@ const dbService = {
     }
   },
 
-  async event(idEvent) {
+  async eventParticipate(idEvent) {
     const request = `SELECT eu."ID_USER", u."USER_FIRSTNAME", u."USER_NAME", p."PROFILE_AVATAR", p."PROFILE_DESC"
     FROM "EVENT_USER" eu
     JOIN "EVENT" e ON e."ID_EVENT" = '${idEvent}'
     JOIN "USER" u ON eu."ID_USER" = u."ID_USER"
     JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
+    WHERE eu."PARTCIPATE" = true
+    LIMIT 100`;
+
+    try {
+      const results = await dbconnexion.db.query(request);
+      if (!results || results[0].length === 0) { return null; }
+      return results[0];
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  async eventFavorites(idEvent) {
+    const request = `SELECT eu."ID_USER", u."USER_FIRSTNAME", u."USER_NAME", p."PROFILE_AVATAR", p."PROFILE_DESC"
+    FROM "EVENT_USER" eu
+    JOIN "EVENT" e ON e."ID_EVENT" = '${idEvent}'
+    JOIN "USER" u ON eu."ID_USER" = u."ID_USER"
+    JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
+    WHERE eu."FAVORITE" = true
     LIMIT 100`;
 
     try {
@@ -494,21 +571,6 @@ const dbService = {
     } catch (e) {
       throw e;
     }
-  },
-
-  async userParticipateEvent(idUser, idEvent) {
-    const requestExistance = `SELECT * FROM "EVENT_USER" eu
-    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}' AND "PARTICIPATE" = true`;
-
-    let existence;
-    try {
-      existence = await dbconnexion.db.query(requestExistance);
-    } catch (e) {
-      throw e;
-    }
-    // On check si il participe déja
-    if (!existence || existence[0].length === 0) { return false; }
-    return true;
   },
 };
 
