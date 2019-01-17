@@ -523,7 +523,7 @@ const dbService = {
     JOIN "EVENT" e ON e."ID_EVENT" = '${idEvent}'
     JOIN "USER" u ON eu."ID_USER" = u."ID_USER"
     JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
-    WHERE eu."PARTCIPATE" = true
+    WHERE eu."PARTICIPATE" = true
     LIMIT 100`;
 
     try {
