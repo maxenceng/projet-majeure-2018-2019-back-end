@@ -287,19 +287,23 @@ const dbService = {
     e."EVENT_DESC", e."EVENT_NAME", m."MEDIA_TYPE", m."MEDIA_CONTENT" FROM "EVENT" e
     JOIN "LOCATION" l ON e."ID_EVENT" = l."LOC_EVENT"
     JOIN "MEDIA" m on e."ID_EVENT" = m."MEDIA_EVENT"
+    JOIN "TAG" t on t."TAG_EVENT" = e."ID_EVENT"
     AND l."LOC_LATITUDE" < ${lat + 1} AND l."LOC_LATITUDE" > ${lat - 1}
     AND l."LOC_LONGITUDE" < ${lng + 1} AND l."LOC_LONGITUDE" > ${lng - 1}
-    AND e."EVENT_DATE" > ${realDate} AND e."EVENT_DATE" < ${realDate + 1000 * 3600 * 24 * 10}
-    LIMIT 40`;
+    AND e."EVENT_DATE" > ${realDate} AND e."EVENT_DATE" < ${realDate + 1000 * 3600 * 24 * 10}`;
 
-    const requestPreferences = async preference => `e."EVENT_TAG" = ${preference} OR`;
+    const requestPreferences = async preference => ` t."TAG_TEXT" = '${preference}' OR `;
 
     if (tags) {
-      request += 'AND';
-      tags.forEach(async (pref) => {
+      request += ' AND';
+      await Promise.all(tags.map(async (pref) => {
         request += await requestPreferences(pref);
-      });
-      request = request.substring(0, request.length - 3);
+        console.log(request);
+      }));
+      request = request.substring(0, request.length - 4);
+      request += ' LIMIT 40';
+      console.log(request);
+      console.log('final');
     }
 
     try {
@@ -555,14 +559,14 @@ const dbService = {
 
   async userInterrestedEvent(idEvent) {
     const request = `SELECT eu."ID_USER", u."USER_FIRSTNAME", u."USER_NAME", p."PROFILE_AVATAR", p."PROFILE_DESC"
-    FROM "EVENT_USER" eu
-    JOIN "EVENT" e ON e."ID_EVENT" = '${idEvent}'
-    JOIN "TAG" te ON e."ID_EVENT" = te."TAG_EVENT"
-    JOIN "USER" u ON eu."ID_USER" = u."ID_USER"
-    JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
-    JOIN "TAG" tu ON tu."TAG_PROFILE" = p."ID_PROFILE"
-    WHERE tu."TAG_TEXT" = te."TAG_TEXT" 
-    LIMIT 100`;
+      FROM "EVENT_USER" eu
+      JOIN "EVENT" e ON e."ID_EVENT" = '${idEvent}'
+      JOIN "TAG" te ON e."ID_EVENT" = te."TAG_EVENT"
+      JOIN "USER" u ON eu."ID_USER" = u."ID_USER"
+      JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
+      JOIN "TAG" tu ON tu."TAG_PROFILE" = p."ID_PROFILE"
+      WHERE tu."TAG_TEXT" = te."TAG_TEXT"
+      LIMIT 100`;
 
     try {
       const results = await dbconnexion.db.query(request);

@@ -13,7 +13,7 @@ const router = Router();
  */
 router.route('/allEvents').get(async (req, res) => {
   const {
-    date, location, tags, price,
+    date, location, tags,
   } = req.query;
 
   let tabTags;
@@ -64,7 +64,7 @@ router.route('/allEvents').get(async (req, res) => {
   }
 
   try {
-    const result = await dbService.allEvents(formattedDate, locationObj, tabTags, price);
+    const result = await dbService.allEvents(formattedDate, locationObj, tabTags);
     if (result[0]) {
       return res.status(200).send({ message: 'Get events ok!', events: result[0] });
     }
