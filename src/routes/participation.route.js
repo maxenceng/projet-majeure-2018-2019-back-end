@@ -58,7 +58,7 @@ router.route('/usersInterestedEvent').get(async (req, res) => {
     return res.status(200).send({ event });
   } catch (e) {
     console.error(e);
-    return res.status(500).send({ err: 'Error append when getting the event' });
+    return res.status(500).send({ err: 'Error append when search interested users for the event' });
   }
 });
 
