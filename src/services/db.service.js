@@ -367,7 +367,8 @@ const dbService = {
   async participateEvent(idUser, idEvent) {
     let existence;
     const requestExistance = `SELECT * FROM "EVENT_USER" 
-    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}'`;
+      WHERE "ID_USER" = '${idUser}' 
+      AND "ID_EVENT" = '${idEvent}'`;
 
     try {
       existence = await dbconnexion.db.query(requestExistance);
@@ -376,24 +377,54 @@ const dbService = {
     }
 
     // On check si il participe déja
-    if (existence && existence[0].length !== 0) { throw new Error('User is already participating to the event'); }
+    if (existence && existence[0].length !== 0) {
+      const requestUpdateParticipation = `UPDATE "EVENT_USER" eu
+      SET "PARTICIPATE" = true
+      WHERE "ID_USER" = '${idUser}' 
+      AND "ID_EVENT" = '${idEvent}'`;
 
-    try {
-      await dbconnexion.eventUser.create({
-        ID_USER: idUser,
-        ID_EVENT: idEvent,
-        STATUS: false,
-      });
-    } catch (e) {
-      throw e;
+      try {
+        await dbconnexion.db.query(requestUpdateParticipation);
+      } catch (e) {
+        throw e;
+      }
+    } else {
+      try {
+        await dbconnexion.eventUser.create({
+          ID_USER: idUser,
+          ID_EVENT: idEvent,
+          PARTICIPATE: true,
+          FAVORITE: false,
+        });
+      } catch (e) {
+        throw e;
+      }
     }
+
     return true;
   },
 
-  async cancelParticipation(idUser, idEvent) {
+  async removeParticipation(idUser, idEvent) {
+    const requestCancelParticipation = `UPDATE "EVENT_USER" eu
+      SET "PARTICIPATE" = false
+      WHERE "ID_USER" = '${idUser}' 
+      AND "ID_EVENT" = '${idEvent}'`;
+
+    try {
+      await dbconnexion.db.query(requestCancelParticipation);
+    } catch (e) {
+      throw e;
+    }
+
+    return true;
+  },
+
+  async favoriteEvent(idUser, idEvent, nature) {
     let existence;
     const requestExistance = `SELECT * FROM "EVENT_USER" 
-    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}'`;
+      WHERE "ID_USER" = '${idUser}' 
+      AND "ID_EVENT" = '${idEvent}' 
+      AND "PARTICIPATE" = ${nature}`;
 
     try {
       existence = await dbconnexion.db.query(requestExistance);
@@ -466,8 +497,8 @@ const dbService = {
   },
 
   async userParticipateEvent(idUser, idEvent) {
-    const requestExistance = `SELECT * FROM "EVENT_USER" 
-    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}'`;
+    const requestExistance = `SELECT * FROM "EVENT_USER" eu
+    WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}' AND "PARTICIPATE" = true`;
 
     let existence;
     try {
@@ -475,8 +506,6 @@ const dbService = {
     } catch (e) {
       throw e;
     }
-    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    console.log(existence);
     // On check si il participe déja
     if (!existence || existence[0].length === 0) { return false; }
     return true;

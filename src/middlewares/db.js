@@ -187,7 +187,8 @@ class DBConnexion {
 
     // n to n relations, tables de jointures
     this.eventUser = this.db.define('EVENT_USER', {
-      STATUS: Sequelize.BOOLEAN,
+      PARTICIPATE: Sequelize.BOOLEAN,
+      FAVORITE: Sequelize.BOOLEAN,
     }, {
       freezeTableName: true,
       timestamps: false,
