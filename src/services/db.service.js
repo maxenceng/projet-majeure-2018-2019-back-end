@@ -598,7 +598,7 @@ const dbService = {
       JOIN "USER" u ON eu."ID_USER" = u."ID_USER"
       JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
       JOIN "TAG" tu ON tu."TAG_PROFILE" = p."ID_PROFILE"
-      WHERE tu."TAG_TEXT" = te."TAG_TEXT"
+      WHERE tu."TAG_TEXT" = te."TAG_TEXT" AND eu."ID_EVENT" = '${idEvent}'
       LIMIT 100`;
 
     try {
