@@ -521,7 +521,7 @@ const dbService = {
   async eventParticipate(idEvent) {
     const request = `SELECT eu."ID_USER", u."USER_FIRSTNAME", u."USER_NAME", p."PROFILE_AVATAR", p."PROFILE_DESC"
     FROM "EVENT_USER" eu
-    JOIN "EVENT" e ON e."ID_EVENT" = '${idEvent}'
+    JOIN "EVENT" e ON eu."ID_EVENT" = '${idEvent}'
     JOIN "USER" u ON eu."ID_USER" = u."ID_USER"
     JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
     WHERE eu."PARTICIPATE" = true
@@ -539,7 +539,7 @@ const dbService = {
   async eventFavorites(idEvent) {
     const request = `SELECT eu."ID_USER", u."USER_FIRSTNAME", u."USER_NAME", p."PROFILE_AVATAR", p."PROFILE_DESC"
     FROM "EVENT_USER" eu
-    JOIN "EVENT" e ON e."ID_EVENT" = '${idEvent}'
+    JOIN "EVENT" e ON eu."ID_EVENT" = '${idEvent}'
     JOIN "USER" u ON eu."ID_USER" = u."ID_USER"
     JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
     WHERE eu."FAVORITE" = true
