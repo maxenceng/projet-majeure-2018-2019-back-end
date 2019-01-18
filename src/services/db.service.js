@@ -300,7 +300,7 @@ const dbService = {
         request += await requestPreferences(pref);
       }));
       request = request.substring(0, request.length - 4);
-      request += ' LIMIT 40';
+      request += ' LIMIT 25';
     }
 
     try {
