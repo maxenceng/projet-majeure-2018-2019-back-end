@@ -289,8 +289,8 @@ const dbService = {
     JOIN "MEDIA" m on e."ID_EVENT" = m."MEDIA_EVENT"
     JOIN "TAG" t on t."TAG_EVENT" = e."ID_EVENT"
     AND l."LOC_LATITUDE" < ${lat + 1} AND l."LOC_LATITUDE" > ${lat - 1}
-    AND l."LOC_LONGITUDE" < ${lng + 1} AND l."LOC_LONGITUDE" > ${lng - 1}
-    AND e."EVENT_DATE" > ${realDate} AND e."EVENT_DATE" < ${realDate + 1000 * 3600 * 24 * 10}`;
+    AND l."LOC_LONGITUDE" < ${lng + 1} AND l."LOC_LONGITUDE" > ${lng - 1}`;
+    // AND e."EVENT_DATE" > ${realDate} AND e."EVENT_DATE" < ${realDate + 1000 * 3600 * 24 * 300}`;
 
     const requestPreferences = async preference => ` t."TAG_TEXT" = '${preference}' OR `;
 
@@ -298,12 +298,9 @@ const dbService = {
       request += ' AND';
       await Promise.all(tags.map(async (pref) => {
         request += await requestPreferences(pref);
-        console.log(request);
       }));
       request = request.substring(0, request.length - 4);
       request += ' LIMIT 40';
-      console.log(request);
-      console.log('final');
     }
 
     try {
