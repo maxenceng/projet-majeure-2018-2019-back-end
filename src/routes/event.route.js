@@ -39,6 +39,7 @@ router.route('/allEvents').get(async (req, res) => {
   if (!locationObj) {
     try {
       const result = await opencage.findCoord(location);
+      console.log(result);
       locationObj = {
         lat: result.results[0].geometry.lat,
         lng: result.results[0].geometry.lng,
@@ -72,6 +73,25 @@ router.route('/allEvents').get(async (req, res) => {
   } catch (e) {
     console.error(e);
     return res.status(500).send({ err: 'Error append when getting events' });
+  }
+});
+
+router.route('/eventsByName').get(async (req, res) => {
+  const { name } = req.query;
+
+  if (!name || typeof name !== 'string') {
+    return res.status(400).send({ err: 'name is missisng or a wrong type is sent' });
+  }
+
+  try {
+    const result = await dbService.eventsByName(name);
+    if (result[0]) {
+      return res.status(200).send({ message: 'Get events by name ok!', events: result[0] });
+    }
+    return res.status(200).send({ message: 'Get events by name ok!', events: [] });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send({ err: 'Error append when getting events by name' });
   }
 });
 
