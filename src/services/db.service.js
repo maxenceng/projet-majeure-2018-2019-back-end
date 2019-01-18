@@ -194,17 +194,40 @@ const dbService = {
   },
 
   async profileUser(idUser) {
-    const request = `SELECT p."PROFILE_DESC", p."PROFILE_AVATAR", t."TAG_TEXT", u."USER_FIRSTNAME", u."USER_NAME"
+    const request = `SELECT p."PROFILE_DESC", p."PROFILE_AVATAR", u."USER_FIRSTNAME", u."USER_NAME"
+    FROM "USER" u
+    JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
+    WHERE u."ID_USER" = '${idUser}'`;
+
+    const requestTags = `SELECT t."TAG_TEXT"
     FROM "USER" u
     JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
     JOIN "TAG" t ON t."TAG_PROFILE" = p."ID_PROFILE"
     WHERE u."ID_USER" = '${idUser}'`;
+
+    console.log(requestTags);
+
+    let tagsQuery;
+    try {
+      tagsQuery = await dbconnexion.db.query(requestTags);
+      console.log(tagsQuery[0]);
+    } catch (e) {
+      throw e;
+    }
+
     let profile;
     try {
       profile = await dbconnexion.db.query(request);
     } catch (e) {
       throw e;
     }
+    const tagsAdded = [];
+    if (tagsQuery && tagsQuery[0].length !== 0) {
+      tagsQuery[0].forEach((tag) => {
+        tagsAdded.push(tag.TAG_TEXT);
+      });
+    }
+    profile[0][0].tags = tagsAdded;
     return profile;
   },
 
