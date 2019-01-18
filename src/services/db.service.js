@@ -284,7 +284,7 @@ const dbService = {
     }
 
     let request = `SELECT l."LOC_LATITUDE", l."LOC_LONGITUDE", e."ID_EVENT", e."EVENT_DATE", l."LOC_DISTRICT",
-    e."EVENT_DESC", e."EVENT_NAME", m."MEDIA_TYPE", m."MEDIA_CONTENT" FROM "EVENT" e
+    e."EVENT_DESC", e."EVENT_NAME", m."MEDIA_TYPE", m."MEDIA_CONTENT", t."TAG_TEXT" FROM "EVENT" e
     JOIN "LOCATION" l ON e."ID_EVENT" = l."LOC_EVENT"
     JOIN "MEDIA" m on e."ID_EVENT" = m."MEDIA_EVENT"
     JOIN "TAG" t on t."TAG_EVENT" = e."ID_EVENT"
@@ -519,12 +519,11 @@ const dbService = {
   },
 
   async eventParticipate(idEvent) {
-    const request = `SELECT eu."ID_USER", u."USER_FIRSTNAME", u."USER_NAME", p."PROFILE_AVATAR", p."PROFILE_DESC"
+    const request = `SELECT u."ID_USER", u."USER_FIRSTNAME", u."USER_NAME", p."PROFILE_AVATAR", p."PROFILE_DESC"
     FROM "EVENT_USER" eu
-    JOIN "EVENT" e ON eu."ID_EVENT" = '${idEvent}'
     JOIN "USER" u ON eu."ID_USER" = u."ID_USER"
     JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
-    WHERE eu."PARTICIPATE" = true
+    WHERE eu."PARTICIPATE" = true AND eu."ID_EVENT" = '${idEvent}'
     LIMIT 100`;
 
     try {
@@ -539,10 +538,9 @@ const dbService = {
   async eventFavorites(idEvent) {
     const request = `SELECT eu."ID_USER", u."USER_FIRSTNAME", u."USER_NAME", p."PROFILE_AVATAR", p."PROFILE_DESC"
     FROM "EVENT_USER" eu
-    JOIN "EVENT" e ON eu."ID_EVENT" = '${idEvent}'
     JOIN "USER" u ON eu."ID_USER" = u."ID_USER"
     JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
-    WHERE eu."FAVORITE" = true
+    WHERE eu."FAVORITE" = true AND eu."ID_EVENT" = '${idEvent}'
     LIMIT 100`;
 
     try {
@@ -564,6 +562,28 @@ const dbService = {
       JOIN "TAG" tu ON tu."TAG_PROFILE" = p."ID_PROFILE"
       WHERE tu."TAG_TEXT" = te."TAG_TEXT"
       LIMIT 100`;
+
+    try {
+      const results = await dbconnexion.db.query(request);
+      if (!results || results[0].length === 0) { return null; }
+      return results[0];
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  async UpdatePositionEvents(city) {
+    function generateLyonCoords() {
+      const lat = 45.764043 + (Math.random() - 0.5) * 0.5;
+      const lng = 4.835659 + (Math.random() - 0.5) * 0.5;
+      return { lat, lng };
+    }
+
+    const coord = generateLyonCoords();
+    const request = `UPDATE l
+      SET l."DISCTRICT" = 'Lyon', l."LATITUDE" = ${coord.lat}, l."LONGITUDE" = ${coord.lng}
+      FROM "LOCATION" l JOIN "EVENT" e ON l."LOC_EVENT" = e."ID_EVENT"
+      WHERE l."DISCTRICT" = 'Lyon'`;
 
     try {
       const results = await dbconnexion.db.query(request);
