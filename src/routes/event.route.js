@@ -98,15 +98,27 @@ router.route('/eventsByName').get(async (req, res) => {
 /**
  * get a random event for the user
  */
-router.route('/randomEvent').get((req, res) => {
+router.route('/randomEvent').get(async (req, res) => {
 
 });
 
 /**
  * events chosed for the user in particular
  */
-router.route('/relatedProfileEvents').get((req, res) => {
+router.route('/relatedProfileEvents').get(async (req, res) => {
+  const { idUser } = req.query;
 
+  if (!idUser || typeof idUser !== 'string') {
+    return res.status(400).send({ err: 'Bad parameters' });
+  }
+
+  try {
+    const events = await dbService.relatedProfileEvents(idUser);
+    return res.status(200).send({ events });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send({ err: 'Error append when getting events related with tags' });
+  }
 });
 
 /**

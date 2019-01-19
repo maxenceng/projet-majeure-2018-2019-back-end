@@ -323,8 +323,8 @@ const dbService = {
         request += await requestPreferences(pref);
       }));
       request = request.substring(0, request.length - 4);
-      request += ' LIMIT 25';
     }
+    request += ' LIMIT 75';
 
     try {
       return await dbconnexion.db.query(request);
@@ -606,6 +606,42 @@ const dbService = {
       const results = await dbconnexion.db.query(request);
       if (!results || results[0].length === 0) { return null; }
       return results[0];
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  async relatedProfileEvents(idUser) {
+    const tagsUser = `SELECT t."TAG_TEXT" 
+      FROM "USER" u
+      JOIN "PROFILE" p ON p."PROFILE_USER" = u."ID_USER"
+      JOIN "TAG" t ON t."TAG_PROFILE" = p."ID_PROFILE"
+      WHERE u."ID_USER" = '${idUser}'`;
+
+    const events = async (tag) => {
+      const eventsForTag = `SELECT e."ID_EVENT", e."EVENT_NAME"
+      FROM "EVENT" e
+      JOIN "TAG" t ON e."ID_EVENT" = t."TAG_EVENT"
+      WHERE t."TAG_TEXT" = '${tag}'`;
+
+      try {
+        const eventsTag = await dbconnexion.db.query(eventsForTag);
+        if (!eventsTag || eventsTag[0].length === 0) { return null; }
+        return eventsTag[0];
+      } catch (e) {
+        throw e;
+      }
+    };
+
+    let eventsArray = [];
+    try {
+      const tags = await dbconnexion.db.query(tagsUser);
+      if (!tags[0] || tags.length[0] === 0) { return []; }
+      await Promise.all(tags[0].map(async (tag) => {
+        const results = await events(tag.TAG_TEXT);
+        if (results) { eventsArray = eventsArray.concat(results); }
+      }));
+      return eventsArray;
     } catch (e) {
       throw e;
     }
