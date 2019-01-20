@@ -311,8 +311,8 @@ const dbService = {
     JOIN "LOCATION" l ON e."ID_EVENT" = l."LOC_EVENT"
     JOIN "MEDIA" m on e."ID_EVENT" = m."MEDIA_EVENT"
     JOIN "TAG" t on t."TAG_EVENT" = e."ID_EVENT"
-    AND l."LOC_LATITUDE" < ${lat + 1} AND l."LOC_LATITUDE" > ${lat - 1}
-    AND l."LOC_LONGITUDE" < ${lng + 1} AND l."LOC_LONGITUDE" > ${lng - 1}`;
+    AND l."LOC_LATITUDE" < ${lat + 0.030} AND l."LOC_LATITUDE" > ${lat - 0.030}
+    AND l."LOC_LONGITUDE" < ${lng + 0.06} AND l."LOC_LONGITUDE" > ${lng - 0.06}`;
     // AND e."EVENT_DATE" > ${realDate} AND e."EVENT_DATE" < ${realDate + 1000 * 3600 * 24 * 300}`;
 
     const requestPreferences = async preference => ` t."TAG_TEXT" = '${preference}' OR `;

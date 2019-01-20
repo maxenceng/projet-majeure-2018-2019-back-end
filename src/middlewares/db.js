@@ -50,7 +50,6 @@ class DBConnexion {
         primaryKey: true,
         allowNull: false,
       },
-      // wtf type
       TAG_TEXT: Sequelize.STRING,
       TAG_PROFILE: {
         type: Sequelize.DataTypes.UUID,
@@ -73,7 +72,6 @@ class DBConnexion {
         allowNull: false,
       },
       PROFILE_DESC: Sequelize.STRING,
-      // wtf type
       PROFILE_AVATAR: Sequelize.STRING,
       PROFILE_USER: {
         type: Sequelize.DataTypes.UUID,
@@ -130,7 +128,6 @@ class DBConnexion {
         allowNull: false,
       },
       MEDIA_TYPE: Sequelize.STRING(20),
-      // wtf type
       MEDIA_CONTENT: Sequelize.STRING,
       MEDIA_EVENT: {
         type: Sequelize.DataTypes.UUID,
@@ -150,7 +147,6 @@ class DBConnexion {
       },
       USER_FIRSTNAME: Sequelize.STRING,
       USER_NAME: Sequelize.STRING,
-      // wtf type
       USER_EMAIL: { type: Sequelize.STRING, validate: { isEmail: true } },
       USER_PWD: Sequelize.STRING,
       USER_ROLE: Sequelize.BOOLEAN,

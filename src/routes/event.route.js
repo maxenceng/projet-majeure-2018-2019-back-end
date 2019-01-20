@@ -19,17 +19,18 @@ router.route('/allEvents').get(async (req, res) => {
   let tabTags;
   let locationObj;
   const formattedDate = parseInt(date, 10);
-
   try {
     locationObj = JSON.parse(location);
     // Check parameter location
     if (!locationObj || typeof locationObj !== typeof JSON.parse('{"test": "test"}')) {
       return res.status(400).send({ err: 'Location is missing' });
     }
-
+    Object.keys(locationObj).forEach((key) => {
+      locationObj[key] = parseFloat(locationObj[key], 10);
+    });
     // Check location type
     if (!locationObj.lng || !locationObj.lat
-      || typeof locationObj.lng !== typeof 2 || typeof locationObj.lat !== typeof 2) {
+      || typeof locationObj.lng !== typeof 2.000 || typeof locationObj.lat !== typeof 2.000) {
       return res.status(400).send({ err: 'Lat or lng is not defined' });
     }
   } catch (e) {
@@ -49,6 +50,7 @@ router.route('/allEvents').get(async (req, res) => {
       return res.status(404).send({ err: 'City not found' });
     }
   }
+
 
   // Check date type
   if (date && typeof formattedDate !== typeof 2) { return res.status(400).send({ err: 'Wrong date type' }); }

@@ -1,6 +1,5 @@
 // eslint-disable-next-line no-console
 import express from 'express';
-import http from 'http';
 import io from 'socket.io';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -11,7 +10,6 @@ import userRouter from './src/routes/user.route';
 import eventRouter from './src/routes/event.route';
 import ChatAsync from './src/routes/chatasync.route';
 import participationRouter from './src/routes/participation.route';
-import openid from './src/services/openID.service';
 
 
 // TODO
