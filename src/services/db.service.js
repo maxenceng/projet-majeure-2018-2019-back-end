@@ -339,7 +339,7 @@ const dbService = {
     JOIN "LOCATION" l ON e."ID_EVENT" = l."LOC_EVENT"
     JOIN "MEDIA" m on e."ID_EVENT" = m."MEDIA_EVENT"
     JOIN "TAG" t on t."TAG_EVENT" = e."ID_EVENT"
-    WHERE e."EVENT_NAME" LIKE '%${name}%'`;
+    WHERE UPPER(e."EVENT_NAME") LIKE UPPER('%${name}%')`;
 
     try {
       return await dbconnexion.db.query(request);
