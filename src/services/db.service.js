@@ -619,8 +619,9 @@ const dbService = {
       WHERE u."ID_USER" = '${idUser}'`;
 
     const events = async (tag) => {
-      const eventsForTag = `SELECT e."ID_EVENT", e."EVENT_NAME"
+      const eventsForTag = `SELECT e."ID_EVENT", e."EVENT_NAME", e."EVENT_DESC", e."EVENT_DATE", m."MEDIA_CONTENT"
       FROM "EVENT" e
+      JOIN "MEDIA" m ON e."ID_EVENT" = m."MEDIA_EVENT"
       JOIN "TAG" t ON e."ID_EVENT" = t."TAG_EVENT"
       WHERE t."TAG_TEXT" = '${tag}'`;
 
