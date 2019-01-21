@@ -623,7 +623,7 @@ const dbService = {
       FROM "EVENT" e
       JOIN "MEDIA" m ON e."ID_EVENT" = m."MEDIA_EVENT"
       JOIN "TAG" t ON e."ID_EVENT" = t."TAG_EVENT"
-      WHERE t."TAG_TEXT" = '${tag}'`;
+      WHERE UPPER(t."TAG_TEXT") = UPPER('${tag}')`;
 
       try {
         const eventsTag = await dbconnexion.db.query(eventsForTag);

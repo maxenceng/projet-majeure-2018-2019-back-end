@@ -120,17 +120,4 @@ router.route('/connexionOpenId').post(async (req, res) => {
   return true;
 });
 
-// Route test, à supprimmer
-router.route('/deliverAdminToken').get((req, res) => {
-  const payload = {
-    admin: true,
-  };
-  res.send(webtoken.signToken(payload));
-});
-
-// Route test, à supprimmer
-router.route('/decodeToken').get((req, res) => {
-  res.send(webtoken.decode(req.query.WT));
-});
-
 export default router;
