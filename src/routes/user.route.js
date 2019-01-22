@@ -7,7 +7,7 @@ import webtoken from '../middlewares/webtoken';
 const router = Router();
 
 // Middleware qui check le webtoken
-/* router.use((req, res, next) => {
+router.use((req, res, next) => {
   const auth = req.headers.authorization;
   if (!auth || !webtoken.verifyToken(auth.split(' ')[1])) {
     return res.status(401).send({ err: 'User not authentified' });
@@ -31,7 +31,7 @@ const router = Router();
   }
 
   return next();
-}); */
+});
 
 /**
  * get user profile with
@@ -65,7 +65,7 @@ router.route('/updateProfile').post(async (req, res) => {
   const {
     idUser, tagsArray, description, linkPicture, firstname, lastname,
   } = req.body;
-
+  console.log(req.body);
   // Check parameters
   if (!idUser || !tagsArray || !description || !linkPicture
       || !firstname || !lastname) { return res.status(400).send('Missing Parameters'); }

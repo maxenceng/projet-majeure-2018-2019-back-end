@@ -128,6 +128,7 @@ const dbService = {
     }
   },
 
+  // Retourne les conversations de l'utilisateur
   async userConv(idUser) {
     const request = `SELECT cu."ID_CONV" from "CONV_USER" cu
     WHERE cu."ID_USER" = '${idUser}'`;
@@ -173,6 +174,7 @@ const dbService = {
     return UsersInConv;
   },
 
+  // Retourne tous les messages d'une conversation
   async getMessages(idUser, idSecondUser) {
     const request = `(SELECT m."MES_CONTENT", m."MES_AUTHOR", m."MES_DATE"
       FROM "MESSAGE" m
@@ -193,6 +195,7 @@ const dbService = {
     }
   },
 
+  // Retourne le profil d'un utilisateur
   async profileUser(idUser) {
     const request = `SELECT p."PROFILE_DESC", p."PROFILE_AVATAR", u."USER_FIRSTNAME", u."USER_NAME"
     FROM "USER" u
@@ -205,12 +208,9 @@ const dbService = {
     JOIN "TAG" t ON t."TAG_PROFILE" = p."ID_PROFILE"
     WHERE u."ID_USER" = '${idUser}'`;
 
-    console.log(requestTags);
-
     let tagsQuery;
     try {
       tagsQuery = await dbconnexion.db.query(requestTags);
-      console.log(tagsQuery[0]);
     } catch (e) {
       throw e;
     }
@@ -231,6 +231,7 @@ const dbService = {
     return profile;
   },
 
+  // Update le profil d'un utilisateur
   async updateProfile(idUser, linkPicture, description, tags, firstname, lastname) {
     const request = `
     UPDATE "PROFILE" AS p
@@ -298,6 +299,7 @@ const dbService = {
     });
   },
 
+  // Recherche principale pour les évènements
   async allEvents(date, location, tags) {
     const { lng, lat } = location;
 
@@ -333,6 +335,7 @@ const dbService = {
     }
   },
 
+  // Recherche d'évènements par leur noms
   async eventsByName(name) {
     const request = `SELECT l."LOC_LATITUDE", l."LOC_LONGITUDE", e."ID_EVENT", e."EVENT_DATE", l."LOC_DISTRICT",
     e."EVENT_DESC", e."EVENT_NAME", m."MEDIA_TYPE", m."MEDIA_CONTENT", t."TAG_TEXT" FROM "EVENT" e
@@ -348,6 +351,7 @@ const dbService = {
     }
   },
 
+  // Ajout d'un évènement
   async addEvent(date, location, city, tags, media, eventName, eventDesc) {
     const { lng, lat } = location;
     const uuidEvent = uuidv4();
@@ -403,6 +407,7 @@ const dbService = {
     return true;
   },
 
+  // Met la participation pour un utilisateur à un évènement
   async participateEvent(idUser, idEvent) {
     let existence;
     const requestExistance = `SELECT * FROM "EVENT_USER" 
@@ -443,6 +448,7 @@ const dbService = {
     return true;
   },
 
+  // Utilisateur participe à évènement
   async removeParticipation(idUser, idEvent) {
     const requestCancelParticipation = `UPDATE "EVENT_USER" eu
       SET "PARTICIPATE" = false
@@ -458,6 +464,7 @@ const dbService = {
     return true;
   },
 
+  // On enlève la participation de l'utilisateur pour l'évènement
   async userParticipateEvent(idUser, idEvent) {
     const requestExistance = `SELECT * FROM "EVENT_USER" eu
     WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}' AND "PARTICIPATE" = true`;
@@ -473,6 +480,7 @@ const dbService = {
     return true;
   },
 
+  // On ajoute l'évènement au favoris de l'utilisateur
   async favoriteEvent(idUser, idEvent) {
     let existence;
     const requestExistance = `SELECT * FROM "EVENT_USER" 
@@ -511,6 +519,7 @@ const dbService = {
     }
   },
 
+  // On enlève le favoris de l'utilisateur sur l'évènement
   async removeFavorite(idUser, idEvent) {
     const requestCancelParticipation = `UPDATE "EVENT_USER" eu
       SET "FAVORITE" = false
@@ -526,6 +535,7 @@ const dbService = {
     return true;
   },
 
+  // Check si un utilisateur a un évènement en favoris
   async userFavoriteEvent(idUser, idEvent) {
     const requestExistance = `SELECT * FROM "EVENT_USER" eu
     WHERE "ID_USER" = '${idUser}' AND "ID_EVENT" = '${idEvent}' AND "FAVORITE" = true`;
@@ -541,6 +551,7 @@ const dbService = {
     return true;
   },
 
+  // Donne tous les évènements auxquels un utilisateur participe ou a en favoris
   async userEvents(idUser) {
     const request = `SELECT m."MEDIA_CONTENT", m."MEDIA_TYPE", e."EVENT_NAME", 
     e."EVENT_DATE", e."ID_EVENT", e."EVENT_DESC", eu."PARTICIPATE", eu."FAVORITE" FROM "EVENT_USER" eu
@@ -557,6 +568,7 @@ const dbService = {
     }
   },
 
+  // Retourne tous les utilisateurs qui participent à l'évènement
   async eventParticipate(idEvent) {
     const request = `SELECT u."ID_USER", u."USER_FIRSTNAME", u."USER_NAME", p."PROFILE_AVATAR", p."PROFILE_DESC"
     FROM "EVENT_USER" eu
