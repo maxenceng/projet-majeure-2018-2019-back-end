@@ -43,7 +43,7 @@ router.route('/userConv').get(async (req, res) => {
 });
 
 /**
- * Route test à supprimmer!
+ * Route permettant d'envoyer un message à un utilisateur (route test)
  */
 router.route('/sendMessage').post(async (req, res) => {
   const { idExp, idDest, message } = req.body;

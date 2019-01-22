@@ -170,7 +170,6 @@ const dbService = {
         }
       }));
     }
-    console.log(UsersInConv);
     return UsersInConv;
   },
 
@@ -586,6 +585,7 @@ const dbService = {
     }
   },
 
+  // Retourne tous les utilisateurs qui ont mis l'évènement en favoris
   async eventFavorites(idEvent) {
     const request = `SELECT eu."ID_USER", u."USER_FIRSTNAME", u."USER_NAME", p."PROFILE_AVATAR", p."PROFILE_DESC"
     FROM "EVENT_USER" eu
@@ -603,6 +603,7 @@ const dbService = {
     }
   },
 
+  // Trouve tous les utilisateurs suceptibles de participer à l'évènement
   async userInterrestedEvent(idEvent) {
     const request = `SELECT eu."ID_USER", u."USER_FIRSTNAME", u."USER_NAME", p."PROFILE_AVATAR", p."PROFILE_DESC"
       FROM "EVENT_USER" eu
@@ -623,6 +624,7 @@ const dbService = {
     }
   },
 
+  // Recherche les évènements reliés aux tags de l'utilisateur
   async relatedProfileEvents(idUser) {
     const tagsUser = `SELECT t."TAG_TEXT" 
       FROM "USER" u

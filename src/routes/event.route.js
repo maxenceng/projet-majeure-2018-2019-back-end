@@ -40,7 +40,6 @@ router.route('/allEvents').get(async (req, res) => {
   if (!locationObj) {
     try {
       const result = await opencage.findCoord(location);
-      console.log(result);
       locationObj = {
         lat: result.results[0].geometry.lat,
         lng: result.results[0].geometry.lng,

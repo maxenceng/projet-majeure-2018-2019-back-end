@@ -6,7 +6,7 @@ import webtoken from '../middlewares/webtoken';
 
 const router = Router();
 
-// Middleware qui check le webtoken
+// Middleware qui protège les requêtes
 router.use((req, res, next) => {
   const auth = req.headers.authorization;
   if (!auth || !webtoken.verifyToken(auth.split(' ')[1])) {
@@ -25,6 +25,19 @@ router.use((req, res, next) => {
   if (JSON.stringify(verificationXSS) !== JSON.stringify(queryValues)) {
     return res.status(401).send({ err: 'XSS detected' });
   }
+
+  // On remplace toutes les caractères qui posent problème pour les requêtes
+  // Pas d'influence sur ce qui est stocké en db
+  const changeCaract = (query) => {
+    Object.keys(query).forEach((key) => {
+      if (typeof query[key] === 'string') {
+        query[key] = query[key].replace('\'', '\'\''); // eslint-disable-line no-param-reassign
+      }
+    });
+    return query;
+  };
+  req.query = changeCaract(req.query);
+  req.body = changeCaract(req.body);
 
   if (decodeToken.payload.idUser !== idUser) {
     return res.status(401).send({ err: 'IdUser and webtoken don\'t match' });
@@ -65,10 +78,9 @@ router.route('/updateProfile').post(async (req, res) => {
   const {
     idUser, tagsArray, description, linkPicture, firstname, lastname,
   } = req.body;
-  console.log(req.body);
   // Check parameters
   if (!idUser || !tagsArray || !description || !linkPicture
-      || !firstname || !lastname) { return res.status(400).send('Missing Parameters'); }
+    || !firstname || !lastname) { return res.status(400).send('Missing Parameters'); }
 
   // Check types
   if (typeof idUser !== 'string' || !Array.isArray(tagsArray)
